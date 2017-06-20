@@ -4,15 +4,12 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.os.CountDownTimer;
 import android.os.SystemClock;
-import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.C;
@@ -26,17 +23,11 @@ import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.ui.TimeBar;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
-import com.gyf.barlibrary.BarHide;
-import com.gyf.barlibrary.ImmersionBar;
 import com.yu.yuPlayerLib.R;
-import com.yu.yuPlayerLib.R2;
 
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Locale;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created by igreentree on 2017/6/20 0020.
