@@ -24,8 +24,4 @@ public class VideoPlayerViewController extends FrameLayout {
     public VideoPlayerViewController(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
-
-    public VideoPlayerViewController(@NonNull Context context, @Nullable AttributeSet attrs, @AttrRes int defStyleAttr, @StyleRes int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-    }
 }
