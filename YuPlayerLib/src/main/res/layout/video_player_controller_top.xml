@@ -4,13 +4,8 @@
     android:id="@+id/yu_player_frame_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000">
-
-    <com.yu.yuPlayerLib.media.ui.VideoPlayerView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/videoPlayerView">
-    </com.yu.yuPlayerLib.media.ui.VideoPlayerView>
+    android:layout_gravity="top"
+    android:background="#CC000000">
 
     <LinearLayout
         android:id="@+id/orientation_overlay_button"

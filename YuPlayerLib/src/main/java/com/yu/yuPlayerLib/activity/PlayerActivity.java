@@ -56,7 +56,7 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.video_player_view_controller);
+        setContentView(R.layout.video_player_controller_top);
         ButterKnife.bind(this);
         immersionBar = ImmersionBar.with(this).titleBar(toolbar).transparentBar().hideBar(BarHide.FLAG_HIDE_BAR);
         immersionBar.init();
@@ -141,7 +141,7 @@ public class PlayerActivity extends AppCompatActivity {
         //3.为SimpleExoPlayer设置播放器
         videoPlayerView.setPlayer(simpleExoPlayer);
         String path = Environment.getExternalStorageDirectory().getPath() + File.separator + "test.mp4";
-        videoPlayerView.playVideo(new File(path));
+        //videoPlayerView.playVideo(new File(path));
 
     }
     @Override
