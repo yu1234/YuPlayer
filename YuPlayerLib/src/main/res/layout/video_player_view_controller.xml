@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/yu_player_frame_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000">
+
+    <com.yu.yuPlayerLib.media.ui.VideoPlayerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/videoPlayerView">
+    </com.yu.yuPlayerLib.media.ui.VideoPlayerView>
+
+    <LinearLayout
+        android:id="@+id/orientation_overlay_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="?actionBarSize"
+        android:gravity="left">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/btn_rotate_on" />
+    </LinearLayout>
+
+    <include layout="@layout/video_player_tool_bar" />
+</FrameLayout>
+
