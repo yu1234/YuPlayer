@@ -1,7 +1,9 @@
 package com.yu.yuPlayerLib.activity;
 
 import android.Manifest;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -10,10 +12,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
@@ -22,6 +29,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.util.Util;
 import com.gyf.barlibrary.BarHide;
 import com.gyf.barlibrary.ImmersionBar;
 import com.xiaoleilu.hutool.util.ObjectUtil;
@@ -38,38 +46,43 @@ import static android.R.attr.targetSdkVersion;
 
 
 public class PlayerActivity extends AppCompatActivity {
+    private final static String TAG = PlayerActivity.class.getSimpleName();
     private ImmersionBar immersionBar;
-    @BindView(R2.id.toolbar)
-    Toolbar toolbar;
-    @BindView(R2.id.orientation_overlay_button)
-    LinearLayout orientationOverlayButton;
+    @BindView(R2.id.toolbar_back)
+    ImageView toolbarBack;
+     @BindView(R2.id.orientation_overlay_button)
+     LinearLayout orientationOverlayButton;
     @BindView(R2.id.videoPlayerView)
     VideoPlayerView videoPlayerView;
 
-    private boolean barHideFlag = true;
-    //显示状态倒计时
-    private CountDownTimer barShowCountDownTimer;
-
     private SimpleExoPlayer simpleExoPlayer;
+    private int resumeWindow;
+    private long resumePosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.video_player_controller_top);
+        clearResumePosition();
+        setContentView(R.layout.player_main);
         ButterKnife.bind(this);
-        immersionBar = ImmersionBar.with(this).titleBar(toolbar).transparentBar().hideBar(BarHide.FLAG_HIDE_BAR);
-        immersionBar.init();
-        setSupportActionBar(toolbar);
-        hideBar();
-
-        videoPlayerView.setOnClickListener(new View.OnClickListener() {
+        ImmersionBar.with(this).transparentBar().fullScreen(true).hideBar(BarHide.FLAG_HIDE_BAR).init();
+        toolbarBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (barHideFlag) {
-                    showBar();
-                } else {
-                    hideBar();
+                PlayerActivity.this.finish();
+            }
+        });
+        orientationOverlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Configuration cf= PlayerActivity.this.getResources().getConfiguration(); //获取设置的配置信息
+                int ori = cf.orientation ; //获取屏幕方向
+                if(ori == cf.ORIENTATION_LANDSCAPE){
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+                }else if(ori == cf.ORIENTATION_PORTRAIT){
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 }
 
             }
@@ -82,48 +95,45 @@ public class PlayerActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_tool_bar, menu);
         return true;
     }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if ((Util.SDK_INT <= 23 || simpleExoPlayer == null)) {
+            initPlayer();
+        }
+    }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            releasePlayer();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (Util.SDK_INT > 23) {
+            releasePlayer();
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (ObjectUtil.isNotNull(immersionBar)) {
             immersionBar.destroy();
+            releasePlayer();
         }
 
     }
-
-    private void hideBar() {
-        immersionBar.titleBar(toolbar).transparentBar().hideBar(BarHide.FLAG_HIDE_BAR).init();
-        getSupportActionBar().hide();
-        orientationOverlayButton.setVisibility(View.GONE);
-        barHideFlag = true;
-        if (ObjectUtil.isNotNull(barShowCountDownTimer)) {
-            barShowCountDownTimer.cancel();
+    private void releasePlayer() {
+        if (simpleExoPlayer != null) {
+           simpleExoPlayer.getPlayWhenReady();
+            updateResumePosition();
+            simpleExoPlayer.release();
+            simpleExoPlayer = null;
         }
-        barShowCountDownTimer = null;
-    }
-
-    private void showBar() {
-        immersionBar.titleBar(toolbar).transparentBar().hideBar(BarHide.FLAG_SHOW_BAR).init();
-        getSupportActionBar().show();
-        orientationOverlayButton.setVisibility(View.VISIBLE);
-        barHideFlag = false;
-        if (ObjectUtil.isNotNull(barShowCountDownTimer)) {
-            barShowCountDownTimer.cancel();
-
-        }
-        barShowCountDownTimer = new CountDownTimer(3000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-
-            }
-
-            @Override
-            public void onFinish() {
-                hideBar();
-            }
-        };
-        barShowCountDownTimer.start();
     }
 
     /**
@@ -138,12 +148,18 @@ public class PlayerActivity extends AppCompatActivity {
                 new DefaultTrackSelector(videoTackSelectionFactory);
         //2.创建ExoPlayer
         simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
-        //3.为SimpleExoPlayer设置播放器
+
+        //4.为SimpleExoPlayer设置播放器
         videoPlayerView.setPlayer(simpleExoPlayer);
         String path = Environment.getExternalStorageDirectory().getPath() + File.separator + "test.mp4";
-        //videoPlayerView.playVideo(new File(path));
+        videoPlayerView.playVideo(new File(path));
+        boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
+        if (haveResumePosition) {
+            simpleExoPlayer.seekTo(resumeWindow, resumePosition);
+        }
 
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -153,6 +169,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         }
     }
+
     private void requestPermissions() {
         if (this.selfPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             initPlayer();
@@ -160,6 +177,7 @@ public class PlayerActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
     }
+
     public boolean selfPermissionGranted(String permission) {
         // For Android < Android M, self permissions are always granted.
         boolean result = true;
@@ -179,5 +197,24 @@ public class PlayerActivity extends AppCompatActivity {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        Log.d(TAG, ev.getActionMasked() + "=onTouchEvent");
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            Log.d(TAG, "onTouchEvent=" + ev.getActionMasked());
+        }
+        return true;
+    }
+
+    private void updateResumePosition() {
+        resumeWindow = simpleExoPlayer.getCurrentWindowIndex();
+        resumePosition = simpleExoPlayer.isCurrentWindowSeekable() ? Math.max(0, simpleExoPlayer.getCurrentPosition())
+                : C.TIME_UNSET;
+    }
+    private void clearResumePosition() {
+        resumeWindow = C.INDEX_UNSET;
+        resumePosition = C.TIME_UNSET;
     }
 }

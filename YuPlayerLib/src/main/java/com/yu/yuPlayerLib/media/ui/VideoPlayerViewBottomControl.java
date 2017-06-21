@@ -19,7 +19,6 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.ui.TimeBar;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
@@ -33,7 +32,7 @@ import java.util.Locale;
  * Created by igreentree on 2017/6/20 0020.
  */
 
-public class VideoPlayerViewController extends FrameLayout {
+public class VideoPlayerViewBottomControl extends FrameLayout {
     /**
      * Listener to be notified about changes of the visibility of the UI control.
      */
@@ -80,10 +79,10 @@ public class VideoPlayerViewController extends FrameLayout {
     }
 
     /**
-     * Default {@link PlaybackControlView.ControlDispatcher} that dispatches operations to the player without
+     * Default {@link VideoPlayerViewBottomControl.ControlDispatcher} that dispatches operations to the player without
      * modification.
      */
-    public static final PlaybackControlView.ControlDispatcher DEFAULT_CONTROL_DISPATCHER = new PlaybackControlView.ControlDispatcher() {
+    public static final VideoPlayerViewBottomControl.ControlDispatcher DEFAULT_CONTROL_DISPATCHER = new VideoPlayerViewBottomControl.ControlDispatcher() {
 
         @Override
         public boolean dispatchSetPlayWhenReady(ExoPlayer player, boolean playWhenReady) {
@@ -110,7 +109,7 @@ public class VideoPlayerViewController extends FrameLayout {
 
     private static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
 
-    private final VideoPlayerViewController.ComponentListener componentListener;
+    private final VideoPlayerViewBottomControl.ComponentListener componentListener;
     private final View previousButton;
     private final View nextButton;
     private final View playButton;
@@ -126,8 +125,8 @@ public class VideoPlayerViewController extends FrameLayout {
     private final Timeline.Window window;
 
     private ExoPlayer player;
-    private PlaybackControlView.ControlDispatcher controlDispatcher;
-    private PlaybackControlView.VisibilityListener visibilityListener;
+    private VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher;
+    private VideoPlayerViewBottomControl.VisibilityListener visibilityListener;
 
     private boolean isAttachedToWindow;
     private boolean showMultiWindowTimeBar;
@@ -153,18 +152,18 @@ public class VideoPlayerViewController extends FrameLayout {
         }
     };
 
-    public VideoPlayerViewController(Context context) {
+    public VideoPlayerViewBottomControl(Context context) {
         this(context, null);
     }
 
-    public VideoPlayerViewController(Context context, AttributeSet attrs) {
+    public VideoPlayerViewBottomControl(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public VideoPlayerViewController(Context context, AttributeSet attrs, int defStyleAttr) {
+    public VideoPlayerViewBottomControl(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        int controllerLayoutId = R.layout.video_player_controller;
+        int controllerLayoutId = R.layout.video_player_bottom_control;
         rewindMs = DEFAULT_REWIND_MS;
         fastForwardMs = DEFAULT_FAST_FORWARD_MS;
         showTimeoutMs = DEFAULT_SHOW_TIMEOUT_MS;
@@ -187,7 +186,7 @@ public class VideoPlayerViewController extends FrameLayout {
         formatBuilder = new StringBuilder();
         formatter = new Formatter(formatBuilder, Locale.getDefault());
         adBreakTimesMs = new long[0];
-        componentListener = new VideoPlayerViewController.ComponentListener();
+        componentListener = new VideoPlayerViewBottomControl.ComponentListener();
         controlDispatcher = DEFAULT_CONTROL_DISPATCHER;
 
         View view= LayoutInflater.from(context).inflate(controllerLayoutId, this);
@@ -265,21 +264,21 @@ public class VideoPlayerViewController extends FrameLayout {
     }
 
     /**
-     * Sets the {@link PlaybackControlView.VisibilityListener}.
+     * Sets the {@link VideoPlayerViewBottomControl.VisibilityListener}.
      *
      * @param listener The listener to be notified about visibility changes.
      */
-    public void setVisibilityListener(PlaybackControlView.VisibilityListener listener) {
+    public void setVisibilityListener(VideoPlayerViewBottomControl.VisibilityListener listener) {
         this.visibilityListener = listener;
     }
 
     /**
-     * Sets the {@link PlaybackControlView.ControlDispatcher}.
+     * Sets the {@link VideoPlayerViewBottomControl.ControlDispatcher}.
      *
-     * @param controlDispatcher The {@link PlaybackControlView.ControlDispatcher}, or null to use
+     * @param controlDispatcher The {@link VideoPlayerViewBottomControl.ControlDispatcher}, or null to use
      *     {@link #DEFAULT_CONTROL_DISPATCHER}.
      */
-    public void setControlDispatcher(PlaybackControlView.ControlDispatcher controlDispatcher) {
+    public void setControlDispatcher(VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher) {
         this.controlDispatcher = controlDispatcher == null ? DEFAULT_CONTROL_DISPATCHER
                 : controlDispatcher;
     }

@@ -24,12 +24,19 @@
 
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
-    <View android:id="@+id/exo_controller_placeholder"
+
+    <com.yu.yuPlayerLib.media.ui.VideoPlayerViewTopControl
+        android:id="@+id/videoPlayerViewTopControl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <com.yu.yuPlayerLib.media.ui.VideoPlayerViewBottomControl
+        android:id="@+id/videoPlayerViewBottomControl"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
     <FrameLayout android:id="@+id/exo_overlay"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        />
 
 </merge>

@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -25,29 +27,36 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.id3.ApicFrame;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.text.Cue;
 import com.google.android.exoplayer2.text.TextRenderer;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.PlaybackControlView;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.ui.SubtitleView;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
+import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.yuPlayerLib.R;
 
+import java.io.File;
 import java.util.List;
 
 /**
  * Created by igreentree on 2017/6/19 0019.
  */
 
-public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.VideoListener,
-        TextRenderer.Output, ExoPlayer.EventListener {
+public class VideoPlayerView extends FrameLayout {
     private static final int SURFACE_TYPE_NONE = 0;
     private static final int SURFACE_TYPE_SURFACE_VIEW = 1;
     private static final int SURFACE_TYPE_TEXTURE_VIEW = 2;
@@ -57,8 +66,11 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
     private final View surfaceView;
     private final ImageView artworkView;
     private final SubtitleView subtitleView;
-    private final VideoPlayerViewController controller;
+    private final VideoPlayerViewBottomControl controllerBottom;
+    private final VideoPlayerViewTopControl controllerTop;
+    private final VideoPlayerView.ComponentListener componentListener;
     private final FrameLayout overlayFrameLayout;
+    private final TextView toolbarTitle;
 
     private SimpleExoPlayer player;
     private boolean useController;
@@ -84,8 +96,11 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
             surfaceView = null;
             artworkView = null;
             subtitleView = null;
-            controller = null;
+            controllerBottom = null;
+            controllerTop=null;
+            componentListener = null;
             overlayFrameLayout = null;
+            toolbarTitle=null;
             ImageView logo = new ImageView(context, attrs);
             if (Util.SDK_INT >= 23) {
                 configureEditModeLogoV23(getResources(), logo);
@@ -96,13 +111,13 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
             return;
         }
 
-        int playerLayoutId = R.layout.video_player_view;
+        int playerLayoutId =R.layout.video_player_view;
         boolean useArtwork = true;
         int defaultArtworkId = 0;
         boolean useController = true;
         int surfaceType = SURFACE_TYPE_SURFACE_VIEW;
         int resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT;
-        int controllerShowTimeoutMs = PlaybackControlView.DEFAULT_SHOW_TIMEOUT_MS;
+        int controllerShowTimeoutMs = VideoPlayerViewBottomControl.DEFAULT_SHOW_TIMEOUT_MS;
         boolean controllerHideOnTouch = true;
         if (attrs != null) {
             TypedArray a = context.getTheme().obtainStyledAttributes(attrs,
@@ -126,16 +141,17 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         }
 
         LayoutInflater.from(context).inflate(playerLayoutId, this);
+        componentListener = new VideoPlayerView.ComponentListener();
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
 
         // Content frame.
-        contentFrame = (AspectRatioFrameLayout) findViewById(R.id.exo_content_frame);
+        contentFrame = (AspectRatioFrameLayout) findViewById(com.google.android.exoplayer2.ui.R.id.exo_content_frame);
         if (contentFrame != null) {
             setResizeModeRaw(contentFrame, resizeMode);
         }
 
         // Shutter view.
-        shutterView = findViewById(R.id.exo_shutter);
+        shutterView = findViewById(com.google.android.exoplayer2.ui.R.id.exo_shutter);
 
         // Create a surface view and insert it into the content frame, if there is one.
         if (contentFrame != null && surfaceType != SURFACE_TYPE_NONE) {
@@ -167,22 +183,12 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         }
 
         // Playback control view.
-        View controllerPlaceholder = findViewById(R.id.exo_controller_placeholder);
-        if (controllerPlaceholder != null) {
-            // Note: rewindMs and fastForwardMs are passed via attrs, so we don't need to make explicit
-            // calls to set them.
-            this.controller = new VideoPlayerViewController(context, attrs);
-            controller.setLayoutParams(controllerPlaceholder.getLayoutParams());
-            ViewGroup parent = ((ViewGroup) controllerPlaceholder.getParent());
-            int controllerIndex = parent.indexOfChild(controllerPlaceholder);
-            parent.removeView(controllerPlaceholder);
-            parent.addView(controller, controllerIndex);
-        } else {
-            this.controller = null;
-        }
-        this.controllerShowTimeoutMs = controller != null ? controllerShowTimeoutMs : 0;
+        this.controllerBottom = (VideoPlayerViewBottomControl) findViewById(R.id.videoPlayerViewBottomControl);
+        this.controllerTop = (VideoPlayerViewTopControl) findViewById(R.id.videoPlayerViewTopControl);
+        this.toolbarTitle= (TextView) findViewById(R.id.toolbar_title);
+        this.controllerShowTimeoutMs = controllerBottom != null ? controllerShowTimeoutMs : 0;
         this.controllerHideOnTouch = controllerHideOnTouch;
-        this.useController = useController && controller != null;
+        this.useController = useController && controllerBottom != null;
         hideController();
     }
 
@@ -235,9 +241,9 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
             return;
         }
         if (this.player != null) {
-            this.player.removeListener(this);
-            this.player.clearTextOutput(this);
-            this.player.clearVideoListener(this);
+            this.player.removeListener(componentListener);
+            this.player.clearTextOutput(componentListener);
+            this.player.clearVideoListener(componentListener);
             if (surfaceView instanceof TextureView) {
                 this.player.clearVideoTextureView((TextureView) surfaceView);
             } else if (surfaceView instanceof SurfaceView) {
@@ -246,7 +252,7 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         }
         this.player = player;
         if (useController) {
-            controller.setPlayer(player);
+            controllerBottom.setPlayer(player);
         }
         if (shutterView != null) {
             shutterView.setVisibility(VISIBLE);
@@ -257,9 +263,9 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
             } else if (surfaceView instanceof SurfaceView) {
                 player.setVideoSurfaceView((SurfaceView) surfaceView);
             }
-            player.setVideoListener(this);
-            player.setTextOutput(this);
-            player.addListener(this);
+            player.setVideoListener(componentListener);
+            player.setTextOutput(componentListener);
+            player.addListener(componentListener);
             maybeShowController(false);
             updateForCurrentTrackSelections();
         } else {
@@ -332,16 +338,16 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @param useController Whether the playback controls can be shown.
      */
     public void setUseController(boolean useController) {
-        Assertions.checkState(!useController || controller != null);
+        Assertions.checkState(!useController || controllerBottom != null);
         if (this.useController == useController) {
             return;
         }
         this.useController = useController;
         if (useController) {
-            controller.setPlayer(player);
-        } else if (controller != null) {
-            controller.hide();
-            controller.setPlayer(null);
+            controllerBottom.setPlayer(player);
+        } else if (controllerBottom != null) {
+            controllerBottom.hide();
+            controllerBottom.setPlayer(null);
         }
     }
 
@@ -353,7 +359,7 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @return Whether the key event was handled.
      */
     public boolean dispatchMediaKeyEvent(KeyEvent event) {
-        return useController && controller.dispatchMediaKeyEvent(event);
+        return useController && controllerBottom.dispatchMediaKeyEvent(event);
     }
 
     /**
@@ -369,8 +375,9 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * Hides the playback controls. Does nothing if playback controls are disabled.
      */
     public void hideController() {
-        if (controller != null) {
-            controller.hide();
+        if (controllerBottom != null) {
+            controllerBottom.hide();
+            controllerTop.hide();
         }
     }
 
@@ -394,7 +401,7 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      *     the controller to remain visible indefinitely.
      */
     public void setControllerShowTimeoutMs(int controllerShowTimeoutMs) {
-        Assertions.checkState(controller != null);
+        Assertions.checkState(controllerBottom != null);
         this.controllerShowTimeoutMs = controllerShowTimeoutMs;
     }
 
@@ -411,29 +418,30 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @param controllerHideOnTouch Whether the playback controls are hidden by touch events.
      */
     public void setControllerHideOnTouch(boolean controllerHideOnTouch) {
-        Assertions.checkState(controller != null);
+        Assertions.checkState(controllerBottom != null);
         this.controllerHideOnTouch = controllerHideOnTouch;
     }
 
     /**
-     * Set the {@link PlaybackControlView.VisibilityListener}.
+     * Set the {@link VideoPlayerViewBottomControl.VisibilityListener}.
      *
      * @param listener The listener to be notified about visibility changes.
      */
-    public void setControllerVisibilityListener(PlaybackControlView.VisibilityListener listener) {
-        Assertions.checkState(controller != null);
-        controller.setVisibilityListener(listener);
+    public void setControllerVisibilityListener(VideoPlayerViewBottomControl.VisibilityListener listener) {
+        Assertions.checkState(controllerBottom != null);
+        controllerBottom.setVisibilityListener(listener);
+
     }
 
     /**
-     * Sets the {@link PlaybackControlView.ControlDispatcher}.
+     * Sets the {@link VideoPlayerViewBottomControl.ControlDispatcher}.
      *
-     * @param controlDispatcher The {@link PlaybackControlView.ControlDispatcher}, or null to use
-     *     {@link PlaybackControlView#DEFAULT_CONTROL_DISPATCHER}.
+     * @param controlDispatcher The {@link VideoPlayerViewBottomControl.ControlDispatcher}, or null to use
+     *     {@link VideoPlayerViewBottomControl#DEFAULT_CONTROL_DISPATCHER}.
      */
-    public void setControlDispatcher(PlaybackControlView.ControlDispatcher controlDispatcher) {
-        Assertions.checkState(controller != null);
-        controller.setControlDispatcher(controlDispatcher);
+    public void setControlDispatcher(VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher) {
+        Assertions.checkState(controllerBottom != null);
+        controllerBottom.setControlDispatcher(controlDispatcher);
     }
 
     /**
@@ -442,8 +450,8 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @param rewindMs The rewind increment in milliseconds.
      */
     public void setRewindIncrementMs(int rewindMs) {
-        Assertions.checkState(controller != null);
-        controller.setRewindIncrementMs(rewindMs);
+        Assertions.checkState(controllerBottom != null);
+        controllerBottom.setRewindIncrementMs(rewindMs);
     }
 
     /**
@@ -452,8 +460,8 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @param fastForwardMs The fast forward increment in milliseconds.
      */
     public void setFastForwardIncrementMs(int fastForwardMs) {
-        Assertions.checkState(controller != null);
-        controller.setFastForwardIncrementMs(fastForwardMs);
+        Assertions.checkState(controllerBottom != null);
+        controllerBottom.setFastForwardIncrementMs(fastForwardMs);
     }
 
     /**
@@ -462,8 +470,8 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
      * @param showMultiWindowTimeBar Whether to show all windows.
      */
     public void setShowMultiWindowTimeBar(boolean showMultiWindowTimeBar) {
-        Assertions.checkState(controller != null);
-        controller.setShowMultiWindowTimeBar(showMultiWindowTimeBar);
+        Assertions.checkState(controllerBottom != null);
+        controllerBottom.setShowMultiWindowTimeBar(showMultiWindowTimeBar);
     }
 
     /**
@@ -502,12 +510,13 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         if (!useController || player == null || ev.getActionMasked() != MotionEvent.ACTION_DOWN) {
             return false;
         }
-        if (!controller.isVisible()) {
+        if (!controllerBottom.isVisible()) {
             maybeShowController(true);
         } else if (controllerHideOnTouch) {
-            controller.hide();
+            controllerBottom.hide();
+            controllerTop.hide();
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -526,10 +535,11 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         int playbackState = player.getPlaybackState();
         boolean showIndefinitely = playbackState == ExoPlayer.STATE_IDLE
                 || playbackState == ExoPlayer.STATE_ENDED || !player.getPlayWhenReady();
-        boolean wasShowingIndefinitely = controller.isVisible() && controller.getShowTimeoutMs() <= 0;
-        controller.setShowTimeoutMs(showIndefinitely ? 0 : controllerShowTimeoutMs);
+        boolean wasShowingIndefinitely = controllerBottom.isVisible() && controllerBottom.getShowTimeoutMs() <= 0;
+        controllerBottom.setShowTimeoutMs(showIndefinitely ? 0 : controllerShowTimeoutMs);
         if (isForced || showIndefinitely || wasShowingIndefinitely) {
-            controller.show();
+            controllerBottom.show();
+            controllerTop.show();
         }
     }
 
@@ -624,53 +634,104 @@ public class VideoPlayerView extends FrameLayout implements SimpleExoPlayer.Vide
         aspectRatioFrame.setResizeMode(resizeMode);
     }
 
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
+    private final class ComponentListener implements SimpleExoPlayer.VideoListener,
+            TextRenderer.Output, ExoPlayer.EventListener {
+
+        // TextRenderer.Output implementation
+
+        @Override
+        public void onCues(List<Cue> cues) {
+            if (subtitleView != null) {
+                subtitleView.onCues(cues);
+            }
+        }
+
+        // SimpleExoPlayer.VideoListener implementation
+
+        @Override
+        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                                       float pixelWidthHeightRatio) {
+            if (contentFrame != null) {
+                float aspectRatio = height == 0 ? 1 : (width * pixelWidthHeightRatio) / height;
+                contentFrame.setAspectRatio(aspectRatio);
+            }
+        }
+
+        @Override
+        public void onRenderedFirstFrame() {
+            if (shutterView != null) {
+                shutterView.setVisibility(INVISIBLE);
+            }
+        }
+
+        @Override
+        public void onTracksChanged(TrackGroupArray tracks, TrackSelectionArray selections) {
+            updateForCurrentTrackSelections();
+        }
+
+        // ExoPlayer.EventListener implementation
+
+        @Override
+        public void onLoadingChanged(boolean isLoading) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+            maybeShowController(false);
+        }
+
+        @Override
+        public void onPlayerError(ExoPlaybackException e) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onPositionDiscontinuity() {
+            // Do nothing.
+        }
+
+        @Override
+        public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+            // Do nothing.
+        }
+
+        @Override
+        public void onTimelineChanged(Timeline timeline, Object manifest) {
+            // Do nothing.
+        }
 
     }
+    /**
+     * 文件播放
+     *
+     * @param file
+     */
+    public void playVideo(File file) {
+        if (ObjectUtil.isNotNull(file) && file.exists()) {
+            Uri videoUri = Uri.fromFile(file);
+            //测量播放过程中的带宽。 如果不需要，可以为null。
+            DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+            // 生成加载媒体数据的DataSource实例。
+            DataSource.Factory dataSourceFactory
+                    = new DefaultDataSourceFactory(getContext(), Util.getUserAgent(getContext(), file.getName()), bandwidthMeter);
+            // 生成用于解析媒体数据的Extractor实例。
+            ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
 
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
 
-    }
+            // MediaSource代表要播放的媒体。
+            MediaSource videoSource = new ExtractorMediaSource(videoUri, dataSourceFactory, extractorsFactory,
+                    null, null);
+            //Prepare the player with the source.
+            player.prepare(videoSource);
+            //添加监听的listener
+            //mSimpleExoPlayer.setVideoListener(mVideoListener);
+            player.addListener(componentListener);
+            // mSimpleExoPlayer.setTextOutput(mOutput);
+            player.setPlayWhenReady(true);
+            this.toolbarTitle.setText(file.getName());
 
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-
-    }
-
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
-    }
-
-    @Override
-    public void onPlayerError(ExoPlaybackException error) {
-
-    }
-
-    @Override
-    public void onPositionDiscontinuity() {
-
-    }
-
-    @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-
-    }
-
-    @Override
-    public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-
-    }
-
-    @Override
-    public void onRenderedFirstFrame() {
-
-    }
-
-    @Override
-    public void onCues(List<Cue> cues) {
+        }
 
     }
 }
