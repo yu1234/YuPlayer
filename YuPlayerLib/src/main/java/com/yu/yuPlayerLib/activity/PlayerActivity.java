@@ -1,9 +1,11 @@
 package com.yu.yuPlayerLib.activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +49,7 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.util.Util;
 import com.gyf.barlibrary.ImmersionBar;
+import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.yuPlayerLib.R;
 import com.yu.yuPlayerLib.R2;
 import com.yu.yuPlayerLib.global.PlayerLibApplication;
@@ -66,7 +69,7 @@ import butterknife.ButterKnife;
 import static android.R.attr.targetSdkVersion;
 
 
-public class PlayerActivity extends AppCompatActivity implements ExoPlayer.EventListener {
+public class PlayerActivity extends AppCompatActivity implements ExoPlayer.EventListener, AudioManager.OnAudioFocusChangeListener {
     private final static String TAG = PlayerActivity.class.getSimpleName();
     private static PlayerActivity instance;
 
@@ -98,6 +101,8 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
     private int resumeWindow;
     private long resumePosition;
 
+    private AudioManager audioManager = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +118,7 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
         setContentView(R.layout.player_main);
         ButterKnife.bind(this);
         videoPlayerView.requestFocus();
+        this.audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
     }
 
     public PlayerActivity getInstance() {
@@ -165,12 +171,18 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
         super.onDestroy();
         releasePlayer();
         ImmersionBar.with(this).destroy();
+        if (ObjectUtil.isNotNull(this.audioManager)) {
+            this.audioManager.abandonAudioFocus(this);
+        }
+
 
     }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
+
     private void releasePlayer() {
         if (simpleExoPlayer != null) {
             simpleExoPlayer.getPlayWhenReady();
@@ -238,7 +250,10 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
             if (haveResumePosition) {
                 simpleExoPlayer.seekTo(resumeWindow, resumePosition);
             }
-            simpleExoPlayer.prepare(mediaSource, !haveResumePosition, false);
+            if (this.requestAudioFocus()) {
+                simpleExoPlayer.prepare(mediaSource, !haveResumePosition, false);
+            }
+
         }
 
     }
@@ -352,7 +367,11 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
+        if (playbackState == 4 && ObjectUtil.isNotNull(this.audioManager)) {
+            this.audioManager.abandonAudioFocus(this);
+        } else if (playWhenReady && playbackState == 3) {
+            this.requestAudioFocus();
+        }
     }
 
     @Override
@@ -417,5 +436,61 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
             cause = cause.getCause();
         }
         return false;
+    }
+
+    //请求音频焦点
+    private boolean requestAudioFocus() {
+        if (ObjectUtil.isNotNull(this.audioManager)) {
+            // Request audio focus for playback
+            int result = this.audioManager.requestAudioFocus(this,
+                    // Use the music stream.
+                    AudioManager.STREAM_MUSIC,
+                    // Request permanent focus.
+                    AudioManager.AUDIOFOCUS_GAIN);
+
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_LOSS:
+                //长时间丢失焦点,当其他应用申请的焦点为AUDIOFOCUS_GAIN时，
+                //会触发此回调事件，例如播放QQ音乐，网易云音乐等
+                //通常需要暂停音乐播放，若没有暂停播放就会出现和其他音乐同时输出声音
+                Log.d(TAG, "AUDIOFOCUS_LOSS");
+                //释放焦点，该方法可根据需要来决定是否调用
+                if (ObjectUtil.isNotNull(this.simpleExoPlayer)) {
+                    this.simpleExoPlayer.setPlayWhenReady(false);
+                }
+                //若焦点释放掉之后，将不会再自动获得
+                this.audioManager.abandonAudioFocus(this);
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                //短暂性丢失焦点，当其他应用申请AUDIOFOCUS_GAIN_TRANSIENT或AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE时，
+                //会触发此回调事件，例如播放短视频，拨打电话等。
+                //通常需要暂停音乐播放
+                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
+                if (ObjectUtil.isNotNull(this.simpleExoPlayer)) {
+                    this.simpleExoPlayer.setPlayWhenReady(false);
+                }
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                //短暂性丢失焦点并作降音处理
+                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+                break;
+            case AudioManager.AUDIOFOCUS_GAIN:
+                //当其他应用申请焦点之后又释放焦点会触发此回调
+                //可重新播放音乐
+                Log.d(TAG, "AUDIOFOCUS_GAIN");
+                if (ObjectUtil.isNotNull(this.simpleExoPlayer)) {
+                    this.simpleExoPlayer.setPlayWhenReady(true);
+                }
+                break;
+        }
     }
 }
