@@ -1,4 +1,9 @@
-<resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources  xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">YuPlayerLib</string>
     <string name="action_settings">Settings</string>
+    <string name="error_querying_decoders">无法查询设备解码器</string>
+    <string name="error_no_secure_decoder">该设备不提供安全解码器 <xliff:g id="mime_type">%1$s</xliff:g></string>
+    <string name="error_no_decoder">该设备不提供解码器 <xliff:g id="mime_type">%1$s</xliff:g></string>
+    <string name="error_instantiating_decoder">无法实例化解码器 <xliff:g id="decoder_name">%1$s</xliff:g></string>
 </resources>

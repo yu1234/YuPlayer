@@ -48,6 +48,8 @@ import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.yuPlayerLib.R;
+import com.yu.yuPlayerLib.media.impl.ControlDispatcher;
+import com.yu.yuPlayerLib.media.impl.ControllerVisibilityListener;
 
 import java.io.File;
 import java.util.List;
@@ -89,7 +91,6 @@ public class VideoPlayerView extends FrameLayout {
 
     public VideoPlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-
         if (isInEditMode()) {
             contentFrame = null;
             shutterView = null;
@@ -377,7 +378,6 @@ public class VideoPlayerView extends FrameLayout {
     public void hideController() {
         if (controllerBottom != null) {
             controllerBottom.hide();
-            controllerTop.hide();
         }
     }
 
@@ -422,24 +422,14 @@ public class VideoPlayerView extends FrameLayout {
         this.controllerHideOnTouch = controllerHideOnTouch;
     }
 
-    /**
-     * Set the {@link VideoPlayerViewBottomControl.VisibilityListener}.
-     *
-     * @param listener The listener to be notified about visibility changes.
-     */
-    public void setControllerVisibilityListener(VideoPlayerViewBottomControl.VisibilityListener listener) {
-        Assertions.checkState(controllerBottom != null);
-        controllerBottom.setVisibilityListener(listener);
-
-    }
 
     /**
-     * Sets the {@link VideoPlayerViewBottomControl.ControlDispatcher}.
+     * Sets the {@link ControlDispatcher}.
      *
-     * @param controlDispatcher The {@link VideoPlayerViewBottomControl.ControlDispatcher}, or null to use
+     * @param controlDispatcher The {@link ControlDispatcher}, or null to use
      *     {@link VideoPlayerViewBottomControl#DEFAULT_CONTROL_DISPATCHER}.
      */
-    public void setControlDispatcher(VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher) {
+    public void setControlDispatcher(ControlDispatcher controlDispatcher) {
         Assertions.checkState(controllerBottom != null);
         controllerBottom.setControlDispatcher(controlDispatcher);
     }
@@ -514,7 +504,6 @@ public class VideoPlayerView extends FrameLayout {
             maybeShowController(true);
         } else if (controllerHideOnTouch) {
             controllerBottom.hide();
-            controllerTop.hide();
         }
         return false;
     }
@@ -539,7 +528,6 @@ public class VideoPlayerView extends FrameLayout {
         controllerBottom.setShowTimeoutMs(showIndefinitely ? 0 : controllerShowTimeoutMs);
         if (isForced || showIndefinitely || wasShowingIndefinitely) {
             controllerBottom.show();
-            controllerTop.show();
         }
     }
 
@@ -702,36 +690,5 @@ public class VideoPlayerView extends FrameLayout {
         }
 
     }
-    /**
-     * 文件播放
-     *
-     * @param file
-     */
-    public void playVideo(File file) {
-        if (ObjectUtil.isNotNull(file) && file.exists()) {
-            Uri videoUri = Uri.fromFile(file);
-            //测量播放过程中的带宽。 如果不需要，可以为null。
-            DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
-            // 生成加载媒体数据的DataSource实例。
-            DataSource.Factory dataSourceFactory
-                    = new DefaultDataSourceFactory(getContext(), Util.getUserAgent(getContext(), file.getName()), bandwidthMeter);
-            // 生成用于解析媒体数据的Extractor实例。
-            ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
 
-
-            // MediaSource代表要播放的媒体。
-            MediaSource videoSource = new ExtractorMediaSource(videoUri, dataSourceFactory, extractorsFactory,
-                    null, null);
-            //Prepare the player with the source.
-            player.prepare(videoSource);
-            //添加监听的listener
-            //mSimpleExoPlayer.setVideoListener(mVideoListener);
-            player.addListener(componentListener);
-            // mSimpleExoPlayer.setTextOutput(mOutput);
-            player.setPlayWhenReady(true);
-            this.toolbarTitle.setText(file.getName());
-
-        }
-
-    }
 }

@@ -6,10 +6,12 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:name=".global.PlayerLibApplication">
 
         <activity android:name=".activity.PlayerActivity"
             android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.NoActionBar">
 
         </activity>

@@ -23,6 +23,10 @@ import com.google.android.exoplayer2.ui.TimeBar;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 import com.yu.yuPlayerLib.R;
+import com.yu.yuPlayerLib.media.impl.ControlDispatcher;
+import com.yu.yuPlayerLib.media.impl.ControllerVisibilityListener;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.Arrays;
 import java.util.Formatter;
@@ -33,56 +37,13 @@ import java.util.Locale;
  */
 
 public class VideoPlayerViewBottomControl extends FrameLayout {
-    /**
-     * Listener to be notified about changes of the visibility of the UI control.
-     */
-    public interface VisibilityListener {
 
-        /**
-         * Called when the visibility changes.
-         *
-         * @param visibility The new visibility. Either {@link View#VISIBLE} or {@link View#GONE}.
-         */
-        void onVisibilityChange(int visibility);
-
-    }
 
     /**
-     * Dispatches operations to the player.
-     * <p>
-     * Implementations may choose to suppress (e.g. prevent playback from resuming if audio focus is
-     * denied) or modify (e.g. change the seek position to prevent a user from seeking past a
-     * non-skippable advert) operations.
-     */
-    public interface ControlDispatcher {
-
-        /**
-         * Dispatches a {@link ExoPlayer#setPlayWhenReady(boolean)} operation.
-         *
-         * @param player The player to which the operation should be dispatched.
-         * @param playWhenReady Whether playback should proceed when ready.
-         * @return True if the operation was dispatched. False if suppressed.
-         */
-        boolean dispatchSetPlayWhenReady(ExoPlayer player, boolean playWhenReady);
-
-        /**
-         * Dispatches a {@link ExoPlayer#seekTo(int, long)} operation.
-         *
-         * @param player The player to which the operation should be dispatched.
-         * @param windowIndex The index of the window.
-         * @param positionMs The seek position in the specified window, or {@link C#TIME_UNSET} to seek
-         *     to the window's default position.
-         * @return True if the operation was dispatched. False if suppressed.
-         */
-        boolean dispatchSeekTo(ExoPlayer player, int windowIndex, long positionMs);
-
-    }
-
-    /**
-     * Default {@link VideoPlayerViewBottomControl.ControlDispatcher} that dispatches operations to the player without
+     * Default {@link ControlDispatcher} that dispatches operations to the player without
      * modification.
      */
-    public static final VideoPlayerViewBottomControl.ControlDispatcher DEFAULT_CONTROL_DISPATCHER = new VideoPlayerViewBottomControl.ControlDispatcher() {
+    public static final ControlDispatcher DEFAULT_CONTROL_DISPATCHER = new ControlDispatcher() {
 
         @Override
         public boolean dispatchSetPlayWhenReady(ExoPlayer player, boolean playWhenReady) {
@@ -125,8 +86,8 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
     private final Timeline.Window window;
 
     private ExoPlayer player;
-    private VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher;
-    private VideoPlayerViewBottomControl.VisibilityListener visibilityListener;
+    private ControlDispatcher controlDispatcher;
+
 
     private boolean isAttachedToWindow;
     private boolean showMultiWindowTimeBar;
@@ -189,7 +150,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
         componentListener = new VideoPlayerViewBottomControl.ComponentListener();
         controlDispatcher = DEFAULT_CONTROL_DISPATCHER;
 
-        View view= LayoutInflater.from(context).inflate(controllerLayoutId, this);
+        View view = LayoutInflater.from(context).inflate(controllerLayoutId, this);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
 
         durationView = (TextView) findViewById(com.google.android.exoplayer2.ui.R.id.exo_duration);
@@ -263,22 +224,14 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
         updateTimeBarMode();
     }
 
-    /**
-     * Sets the {@link VideoPlayerViewBottomControl.VisibilityListener}.
-     *
-     * @param listener The listener to be notified about visibility changes.
-     */
-    public void setVisibilityListener(VideoPlayerViewBottomControl.VisibilityListener listener) {
-        this.visibilityListener = listener;
-    }
 
     /**
-     * Sets the {@link VideoPlayerViewBottomControl.ControlDispatcher}.
+     * Sets the {@link ControlDispatcher}.
      *
-     * @param controlDispatcher The {@link VideoPlayerViewBottomControl.ControlDispatcher}, or null to use
-     *     {@link #DEFAULT_CONTROL_DISPATCHER}.
+     * @param controlDispatcher The {@link ControlDispatcher}, or null to use
+     *                          {@link #DEFAULT_CONTROL_DISPATCHER}.
      */
-    public void setControlDispatcher(VideoPlayerViewBottomControl.ControlDispatcher controlDispatcher) {
+    public void setControlDispatcher(ControlDispatcher controlDispatcher) {
         this.controlDispatcher = controlDispatcher == null ? DEFAULT_CONTROL_DISPATCHER
                 : controlDispatcher;
     }
@@ -287,7 +240,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
      * Sets the rewind increment in milliseconds.
      *
      * @param rewindMs The rewind increment in milliseconds. A non-positive value will cause the
-     *     rewind button to be disabled.
+     *                 rewind button to be disabled.
      */
     public void setRewindIncrementMs(int rewindMs) {
         this.rewindMs = rewindMs;
@@ -298,7 +251,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
      * Sets the fast forward increment in milliseconds.
      *
      * @param fastForwardMs The fast forward increment in milliseconds. A non-positive value will
-     *     cause the fast forward button to be disabled.
+     *                      cause the fast forward button to be disabled.
      */
     public void setFastForwardIncrementMs(int fastForwardMs) {
         this.fastForwardMs = fastForwardMs;
@@ -310,7 +263,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
      * this duration of time has elapsed without user input.
      *
      * @return The duration in milliseconds. A non-positive value indicates that the controls will
-     *     remain visible indefinitely.
+     * remain visible indefinitely.
      */
     public int getShowTimeoutMs() {
         return showTimeoutMs;
@@ -321,7 +274,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
      * duration of time has elapsed without user input.
      *
      * @param showTimeoutMs The duration in milliseconds. A non-positive value will cause the controls
-     *     to remain visible indefinitely.
+     *                      to remain visible indefinitely.
      */
     public void setShowTimeoutMs(int showTimeoutMs) {
         this.showTimeoutMs = showTimeoutMs;
@@ -334,9 +287,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
     public void show() {
         if (!isVisible()) {
             setVisibility(VISIBLE);
-            if (visibilityListener != null) {
-                visibilityListener.onVisibilityChange(getVisibility());
-            }
+            postVisibilityChange();
             updateAll();
             requestPlayPauseFocus();
         }
@@ -350,13 +301,20 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
     public void hide() {
         if (isVisible()) {
             setVisibility(GONE);
-            if (visibilityListener != null) {
-                visibilityListener.onVisibilityChange(getVisibility());
-            }
+            postVisibilityChange();
             removeCallbacks(updateProgressAction);
             removeCallbacks(hideAction);
             hideAtMs = C.TIME_UNSET;
         }
+    }
+
+    /**
+     * 界面显示状态改变广播
+     */
+    private void postVisibilityChange() {
+        ControllerVisibilityListener listener = new ControllerVisibilityListener();
+        listener.setVisibility(getVisibility());
+        EventBus.getDefault().post(listener);
     }
 
     /**
@@ -741,7 +699,7 @@ public class VideoPlayerViewBottomControl extends FrameLayout {
      * Returns whether the specified {@code timeline} can be shown on a multi-window time bar.
      *
      * @param timeline The {@link Timeline} to check.
-     * @param period A scratch {@link Timeline.Period} instance.
+     * @param period   A scratch {@link Timeline.Period} instance.
      * @return Whether the specified timeline can be shown on a multi-window time bar.
      */
     private static boolean canShowMultiWindowTimeBar(Timeline timeline, Timeline.Period period) {

@@ -37,4 +37,6 @@
     <color name="c_stock_green" >#347724</color>
 
     <color name="c_light_yellow" >#F8AC48</color>
+
+    <color name="c_light_black" >#CC000000</color>
 </resources>
