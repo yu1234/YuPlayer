@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -22,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.C;
@@ -66,6 +68,10 @@ public class VideoPlayerView extends FrameLayout {
     TextView currentProcessText;
     @BindView(R2.id.changeProcessText)
     TextView changeProcessText;
+    @BindView(R2.id.seedBarLeft)
+    VerticalSeekBar seedBarLeft;
+    @BindView(R2.id.seedBarRight)
+    VerticalSeekBar seedBarRight;
     /**
      * =================控件注入 end=====================
      */
@@ -97,6 +103,9 @@ public class VideoPlayerView extends FrameLayout {
     private static boolean isScroll;
 
     private long resumePosition;
+
+    public AudioManager audioManager;
+    private int maxVolume, currentVolume;
 
     public VideoPlayerView(Context context) {
         this(context, null);
@@ -211,6 +220,32 @@ public class VideoPlayerView extends FrameLayout {
         hideController();
         //手势监听注册
         gestureDetector = new GestureDetector(view.getContext(), new MySimpleOnGestureListener());
+        //音量调节
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
+        seedBarLeft.setMax(maxVolume);
+        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);  //获取当前值
+        seedBarLeft.setProgress(currentVolume);
+
+        seedBarLeft.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() //调音监听器
+        {
+            public void onProgressChanged(SeekBar arg0,int progress,boolean fromUser)
+            {
+                Log.i(TAG,"progress:"+progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+
+
+            }
+        });
     }
 
     /**
@@ -638,23 +673,49 @@ public class VideoPlayerView extends FrameLayout {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             Log.i(TAG, "onScroll");
-            isScroll = true;
-            if (e1.getX() - e2.getX() > FLIP_DISTANCE) {
-                changeProcessForScroll(e1, e2, false);
 
+            if (e1.getX() - e2.getX() > FLIP_DISTANCE) {
+                Log.i(TAG, "向右滑");
+                changeProcessForScroll(e1, e2, false);
                 return true;
             }
             if (e2.getX() - e1.getX() > FLIP_DISTANCE) {
+                Log.i(TAG, "向左滑");
                 changeProcessForScroll(e1, e2, true);
-
                 return true;
             }
             if (e1.getY() - e2.getY() > FLIP_DISTANCE) {
-
+                if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
+                    Log.i(TAG, "右半屏，向上滑");
+                } else {
+                    Log.i(TAG, "左半屏，向上滑");
+                    maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
+                    seedBarLeft.setMax(maxVolume);
+                    int progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    currentVolume=  progress = progress + (int) (((e1.getY() - e2.getY()) / FLIP_DISTANCE)*0.2);
+                    if (progress > maxVolume) {
+                        progress = maxVolume;
+                    }
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+                    seedBarLeft.setProgress(progress);
+                }
                 return true;
             }
             if (e2.getY() - e1.getY() > FLIP_DISTANCE) {
-
+                if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
+                    Log.i(TAG, "右半屏，向下滑");
+                } else {
+                    Log.i(TAG, "左半屏，向下滑");
+                    maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
+                    seedBarLeft.setMax(maxVolume);
+                    int progress =audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    currentVolume=  progress = progress - (int) (((e2.getY() - e1.getY()) / FLIP_DISTANCE)*0.2);
+                    if (progress < 0) {
+                        progress = 0;
+                    }
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+                    seedBarLeft.setProgress(progress);
+                }
                 return true;
             }
             return true;
@@ -679,6 +740,7 @@ public class VideoPlayerView extends FrameLayout {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
+            seedBarLeft.setProgress(seedBarLeft.getProgress());
             return true;
         }
 
@@ -728,7 +790,7 @@ public class VideoPlayerView extends FrameLayout {
 
         private void changeProcessForScroll(MotionEvent e1, MotionEvent e2, boolean direction) {
             if (ObjectUtil.isNotNull(player)) {
-
+                isScroll = true;
                 if (scrollProcessView.getVisibility() == View.GONE) {
                     scrollProcessView.setVisibility(View.VISIBLE);
                 }
@@ -824,7 +886,6 @@ public class VideoPlayerView extends FrameLayout {
                 if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
                     this.scrollProcessView.setVisibility(View.GONE);
                 }
-                Log.i(TAG, "changeProcessForScroll=end");
             }
 
         }

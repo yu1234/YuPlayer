@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.google.android.exoplayer2.ui.AspectRatioFrameLayout
         android:id="@+id/exo_content_frame"
@@ -24,7 +25,8 @@
         <com.google.android.exoplayer2.ui.SubtitleView
             android:id="@+id/exo_subtitles"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+           />
 
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
@@ -33,7 +35,38 @@
         android:id="@+id/videoPlayerViewTopControl"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <!-- This library requires pair of the VerticalSeekBar and VerticalSeekBarWrapper classes -->
+    <com.yu.yuPlayerLib.media.ui.VerticalSeekBar
+        android:id="@+id/seedBarLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="180dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp"
+        android:background="@android:color/transparent"
+        android:layout_gravity="left|center"
+        android:splitTrack="false"
+        android:maxHeight="2dp"
+        android:max="100"
+        android:progressDrawable="@drawable/play_seek_bar_bg"
+        android:thumb="@drawable/slider_thumb_normal" />
+    <com.yu.yuPlayerLib.media.ui.VerticalSeekBar
+        android:id="@+id/seedBarRight"
+        android:layout_width="wrap_content"
+        android:layout_height="180dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp"
+        android:background="@android:color/transparent"
+        android:layout_gravity="right|center"
+        android:splitTrack="false"
+        android:maxHeight="2dp"
+        android:max="100"
+        android:progressDrawable="@drawable/play_seek_bar_bg"
+        android:thumb="@drawable/slider_thumb_normal"
+        />
     <LinearLayout
         android:id="@+id/scrollProcessView"
         android:layout_width="wrap_content"
@@ -67,6 +100,9 @@
     <FrameLayout
         android:id="@+id/exo_overlay"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+
+    </FrameLayout>
 
 </merge>
