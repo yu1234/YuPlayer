@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -55,7 +56,7 @@ import butterknife.ButterKnife;
  * Created by igreentree on 2017/6/19 0019.
  */
 
-public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGestureListener {
+public class VideoPlayerView extends FrameLayout {
     /**
      * =================控件注入 start=====================
      */
@@ -209,7 +210,7 @@ public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGe
         this.useController = useController && controllerBottom != null;
         hideController();
         //手势监听注册
-        gestureDetector = new GestureDetector(view.getContext(), this);
+        gestureDetector = new GestureDetector(view.getContext(), new MySimpleOnGestureListener());
     }
 
     /**
@@ -633,6 +634,186 @@ public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGe
     /**
      * ========================================屏幕手势监听 start===================================================
      */
+    class MySimpleOnGestureListener extends SimpleOnGestureListener {
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            Log.i(TAG, "onScroll");
+            isScroll = true;
+            if (e1.getX() - e2.getX() > FLIP_DISTANCE) {
+                changeProcessForScroll(e1, e2, false);
+
+                return true;
+            }
+            if (e2.getX() - e1.getX() > FLIP_DISTANCE) {
+                changeProcessForScroll(e1, e2, true);
+
+                return true;
+            }
+            if (e1.getY() - e2.getY() > FLIP_DISTANCE) {
+
+                return true;
+            }
+            if (e2.getY() - e1.getY() > FLIP_DISTANCE) {
+
+                return true;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            Log.i(TAG, "onSingleTapConfirmed");
+            if (scrollProcessView.getVisibility() == View.VISIBLE) {
+                scrollProcessView.setVisibility(View.GONE);
+            }
+            if (!useController || player == null) {
+                return false;
+            }
+            if (!controllerBottom.isVisible()) {
+                maybeShowController(true);
+            } else if (controllerHideOnTouch) {
+                controllerBottom.hide();
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            super.onLongPress(e);
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            return true;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+            super.onShowPress(e);
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            Log.i(TAG, "onDoubleTap");
+            if (ObjectUtil.isNotNull(player)) {
+                if (player.getPlayWhenReady()) {
+                    player.setPlayWhenReady(false);
+                } else {
+                    player.setPlayWhenReady(true);
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTapEvent(MotionEvent e) {
+            Log.i(TAG, "onDoubleTapEvent");
+            return true;
+        }
+
+        @Override
+        public boolean onContextClick(MotionEvent e) {
+            return true;
+        }
+
+        private void changeProcessForScroll(MotionEvent e1, MotionEvent e2, boolean direction) {
+            if (ObjectUtil.isNotNull(player)) {
+
+                if (scrollProcessView.getVisibility() == View.GONE) {
+                    scrollProcessView.setVisibility(View.VISIBLE);
+                }
+                player.setPlayWhenReady(false);
+                long duration = player.getDuration();
+                resumePosition = player.getCurrentPosition();
+                int p = 0;
+
+                if (ObjectUtil.isNotNull(changeProcessText)) {
+                    String text = "";
+                    if (direction) {
+                        p = (int) (((e2.getX() - e1.getX()) / FLIP_DISTANCE) * 1.8);
+                        text = "[+";
+                        if (p > 9) {
+                            int m = p / 60;
+                            if (m > 1) {
+                                if (m > 9) {
+                                    text += m + ":" + (p - m * 60) + "]";
+                                } else {
+                                    text += "0" + m + ":" + (p - m * 60) + "]";
+                                }
+                            } else {
+                                text += "00:" + p + "]";
+                            }
+                        } else {
+                            text += "00:0" + p + "]";
+                        }
+                        resumePosition += p * 1000;
+                        if (resumePosition > duration) {
+                            resumePosition = duration;
+                        }
+                    } else {
+                        p = (int) (((e1.getX() - e2.getX()) / FLIP_DISTANCE) * 1.8);
+                        text = "[-";
+                        if (p > 9) {
+                            int m = p / 60;
+                            if (m > 1) {
+                                if (m > 9) {
+                                    text += m + ":" + (p - m * 60) + "]";
+                                } else {
+                                    text += "0" + m + ":" + (p - m * 60) + "]";
+                                }
+                            } else {
+                                text += "00:" + p + "]";
+                            }
+                        } else {
+                            text += "00:0" + p + "]";
+                        }
+                        resumePosition -= p * 1000;
+                        if (resumePosition < 0) {
+                            resumePosition = 0;
+                        }
+                    }
+                    changeProcessText.setText(text);
+                }
+                long currentPosition = resumePosition;
+                if (ObjectUtil.isNotNull(currentProcessText)) {
+                    String text = "";
+                    int dh = (int) (duration / (60 * 60 * 1000));
+                    int h = (int) (currentPosition / (60 * 60 * 1000));
+                    int m = (int) ((currentPosition - h * 60 * 60 * 1000) / (60 * 1000));
+                    int s = (int) ((currentPosition - h * 60 * 60 * 1000 - m * 60 * 1000) / (1000));
+                    if (dh > 0) {
+                        if (h > 9) {
+                            text += h + ":";
+                        } else {
+                            text += "0" + h + ":";
+                        }
+                    }
+                    if (m > 9) {
+                        text += m + ":";
+                    } else {
+                        text += "0" + m + ":";
+                    }
+                    if (s > 9) {
+                        text += s;
+                    } else {
+                        text += "0" + s;
+                    }
+                    currentProcessText.setText(text);
+                }
+            }
+        }
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_UP && isScroll) {
@@ -648,157 +829,6 @@ public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGe
 
         }
         return gestureDetector.onTouchEvent(ev);
-    }
-
-    @Override
-    public boolean onDown(MotionEvent e) {
-        Log.i(TAG, "onDown");
-        return true;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        Log.i(TAG, "onSingleTapUp");
-        if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
-            this.scrollProcessView.setVisibility(View.GONE);
-        }
-        if (!useController || player == null) {
-            return false;
-        }
-        if (!controllerBottom.isVisible()) {
-            maybeShowController(true);
-        } else if (controllerHideOnTouch) {
-            controllerBottom.hide();
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        Log.i(TAG, "onScroll");
-        isScroll = true;
-        if (e1.getX() - e2.getX() > FLIP_DISTANCE) {
-            changeProcessForScroll(e1, e2, false);
-
-            return true;
-        }
-        if (e2.getX() - e1.getX() > FLIP_DISTANCE) {
-            changeProcessForScroll(e1, e2, true);
-
-            return true;
-        }
-        if (e1.getY() - e2.getY() > FLIP_DISTANCE) {
-
-            return true;
-        }
-        if (e2.getY() - e1.getY() > FLIP_DISTANCE) {
-
-            return true;
-        }
-        return true;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e) {
-
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        Log.i(TAG, "onFling");
-        return true;
-    }
-
-    private void changeProcessForScroll(MotionEvent e1, MotionEvent e2, boolean direction) {
-        if (ObjectUtil.isNotNull(player)) {
-
-            if (this.scrollProcessView.getVisibility() == View.GONE) {
-                this.scrollProcessView.setVisibility(View.VISIBLE);
-            }
-            player.setPlayWhenReady(false);
-            long duration = player.getDuration();
-            resumePosition = player.getCurrentPosition();
-            int p = 0;
-
-            if (ObjectUtil.isNotNull(this.changeProcessText)) {
-                String text = "";
-                if (direction) {
-                    p = (int) (((e2.getX() - e1.getX()) / FLIP_DISTANCE) * 1.8);
-                    text = "[+";
-                    if (p > 9) {
-                        int m = p / 60;
-                        if (m > 1) {
-                            if (m > 9) {
-                                text += m + ":" + (p - m * 60) + "]";
-                            } else {
-                                text += "0" + m + ":" + (p - m * 60) + "]";
-                            }
-                        } else {
-                            text += "00:" + p + "]";
-                        }
-                    } else {
-                        text += "00:0" + p + "]";
-                    }
-                    resumePosition += p * 1000;
-                    if (resumePosition > duration) {
-                        resumePosition = duration;
-                    }
-                } else {
-                    p = (int) (((e1.getX() - e2.getX()) / FLIP_DISTANCE) * 1.8);
-                    text = "[-";
-                    if (p > 9) {
-                        int m = p / 60;
-                        if (m > 1) {
-                            if (m > 9) {
-                                text += m + ":" + (p - m * 60) + "]";
-                            } else {
-                                text += "0" + m + ":" + (p - m * 60) + "]";
-                            }
-                        } else {
-                            text += "00:" + p + "]";
-                        }
-                    } else {
-                        text += "00:0" + p + "]";
-                    }
-                    resumePosition -= p * 1000;
-                    if (resumePosition < 0) {
-                        resumePosition = 0;
-                    }
-                }
-                this.changeProcessText.setText(text);
-            }
-            long currentPosition = resumePosition;
-            if (ObjectUtil.isNotNull(this.currentProcessText)) {
-                String text = "";
-                int dh = (int) (duration / (60 * 60 * 1000));
-                int h = (int) (currentPosition / (60 * 60 * 1000));
-                int m = (int) ((currentPosition - h * 60 * 60 * 1000) / (60 * 1000));
-                int s = (int) ((currentPosition - h * 60 * 60 * 1000 - m * 60 * 1000) / (1000));
-                if (dh > 0) {
-                    if (h > 9) {
-                        text += h + ":";
-                    } else {
-                        text += "0" + h + ":";
-                    }
-                }
-                if (m > 9) {
-                    text += m + ":";
-                } else {
-                    text += "0" + m + ":";
-                }
-                if (s > 9) {
-                    text += s;
-                } else {
-                    text += "0" + s;
-                }
-                this.currentProcessText.setText(text);
-            }
-        }
     }
 
     /**
@@ -848,7 +878,7 @@ public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGe
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            if(!isScroll){
+            if (!isScroll) {
                 maybeShowController(false);
             }
 
