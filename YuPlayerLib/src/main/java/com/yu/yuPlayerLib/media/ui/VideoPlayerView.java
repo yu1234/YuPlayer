@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.exoplayer2.C;
@@ -38,16 +41,34 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.ui.SubtitleView;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
+import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.yuPlayerLib.R;
+import com.yu.yuPlayerLib.R2;
 import com.yu.yuPlayerLib.media.impl.ControlDispatcher;
 
 import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by igreentree on 2017/6/19 0019.
  */
 
-public class VideoPlayerView extends FrameLayout {
+public class VideoPlayerView extends FrameLayout implements GestureDetector.OnGestureListener {
+    /**
+     * =================控件注入 start=====================
+     */
+    @BindView(R2.id.scrollProcessView)
+    LinearLayout scrollProcessView;
+    @BindView(R2.id.currentProcessText)
+    TextView currentProcessText;
+    @BindView(R2.id.changeProcessText)
+    TextView changeProcessText;
+    /**
+     * =================控件注入 end=====================
+     */
+    private final static String TAG = VideoPlayerView.class.getSimpleName();
     private static final int SURFACE_TYPE_NONE = 0;
     private static final int SURFACE_TYPE_SURFACE_VIEW = 1;
     private static final int SURFACE_TYPE_TEXTURE_VIEW = 2;
@@ -69,6 +90,12 @@ public class VideoPlayerView extends FrameLayout {
     private Bitmap defaultArtwork;
     private int controllerShowTimeoutMs;
     private boolean controllerHideOnTouch;
+    private GestureDetector gestureDetector;
+    private static final float FLIP_DISTANCE = 50;
+
+    private static boolean isScroll;
+
+    private long resumePosition;
 
     public VideoPlayerView(Context context) {
         this(context, null);
@@ -87,10 +114,10 @@ public class VideoPlayerView extends FrameLayout {
             artworkView = null;
             subtitleView = null;
             controllerBottom = null;
-            controllerTop=null;
+            controllerTop = null;
             componentListener = null;
             overlayFrameLayout = null;
-            toolbarTitle=null;
+            toolbarTitle = null;
             ImageView logo = new ImageView(context, attrs);
             if (Util.SDK_INT >= 23) {
                 configureEditModeLogoV23(getResources(), logo);
@@ -101,7 +128,7 @@ public class VideoPlayerView extends FrameLayout {
             return;
         }
 
-        int playerLayoutId =R.layout.video_player_view;
+        int playerLayoutId = R.layout.video_player_view;
         boolean useArtwork = true;
         int defaultArtworkId = 0;
         boolean useController = true;
@@ -130,7 +157,8 @@ public class VideoPlayerView extends FrameLayout {
             }
         }
 
-        LayoutInflater.from(context).inflate(playerLayoutId, this);
+        View view = LayoutInflater.from(context).inflate(playerLayoutId, this);
+        ButterKnife.bind(this, view);
         componentListener = new VideoPlayerView.ComponentListener();
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
 
@@ -175,17 +203,19 @@ public class VideoPlayerView extends FrameLayout {
         // Playback control view.
         this.controllerBottom = (VideoPlayerViewBottomControl) findViewById(R.id.videoPlayerViewBottomControl);
         this.controllerTop = (VideoPlayerViewTopControl) findViewById(R.id.videoPlayerViewTopControl);
-        this.toolbarTitle= (TextView) findViewById(R.id.toolbar_title);
+        this.toolbarTitle = (TextView) findViewById(R.id.toolbar_title);
         this.controllerShowTimeoutMs = controllerBottom != null ? controllerShowTimeoutMs : 0;
         this.controllerHideOnTouch = controllerHideOnTouch;
         this.useController = useController && controllerBottom != null;
         hideController();
+        //手势监听注册
+        gestureDetector = new GestureDetector(view.getContext(), this);
     }
 
     /**
      * Switches the view targeted by a given {@link SimpleExoPlayer}.
      *
-     * @param player The player whose target view is being switched.
+     * @param player        The player whose target view is being switched.
      * @param oldPlayerView The old view to detach from the player.
      * @param newPlayerView The new view to attach to the player.
      */
@@ -376,7 +406,7 @@ public class VideoPlayerView extends FrameLayout {
      * progress.
      *
      * @return The timeout in milliseconds. A non-positive value will cause the controller to remain
-     *     visible indefinitely.
+     * visible indefinitely.
      */
     public int getControllerShowTimeoutMs() {
         return controllerShowTimeoutMs;
@@ -387,7 +417,7 @@ public class VideoPlayerView extends FrameLayout {
      * duration of time has elapsed without user input and with playback or buffering in progress.
      *
      * @param controllerShowTimeoutMs The timeout in milliseconds. A non-positive value will cause
-     *     the controller to remain visible indefinitely.
+     *                                the controller to remain visible indefinitely.
      */
     public void setControllerShowTimeoutMs(int controllerShowTimeoutMs) {
         Assertions.checkState(controllerBottom != null);
@@ -416,7 +446,7 @@ public class VideoPlayerView extends FrameLayout {
      * Sets the {@link ControlDispatcher}.
      *
      * @param controlDispatcher The {@link ControlDispatcher}, or null to use
-     *     {@link VideoPlayerViewBottomControl#DEFAULT_CONTROL_DISPATCHER}.
+     *                          {@link VideoPlayerViewBottomControl#DEFAULT_CONTROL_DISPATCHER}.
      */
     public void setControlDispatcher(ControlDispatcher controlDispatcher) {
         Assertions.checkState(controllerBottom != null);
@@ -468,7 +498,7 @@ public class VideoPlayerView extends FrameLayout {
      * the player.
      *
      * @return The overlay {@link FrameLayout}, or {@code null} if the layout has been customized and
-     *     the overlay is not present.
+     * the overlay is not present.
      */
     public FrameLayout getOverlayFrameLayout() {
         return overlayFrameLayout;
@@ -478,24 +508,12 @@ public class VideoPlayerView extends FrameLayout {
      * Gets the {@link SubtitleView}.
      *
      * @return The {@link SubtitleView}, or {@code null} if the layout has been customized and the
-     *     subtitle view is not present.
+     * subtitle view is not present.
      */
     public SubtitleView getSubtitleView() {
         return subtitleView;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        if (!useController || player == null || ev.getActionMasked() != MotionEvent.ACTION_DOWN) {
-            return false;
-        }
-        if (!controllerBottom.isVisible()) {
-            maybeShowController(true);
-        } else if (controllerHideOnTouch) {
-            controllerBottom.hide();
-        }
-        return false;
-    }
 
     @Override
     public boolean onTrackballEvent(MotionEvent ev) {
@@ -503,6 +521,7 @@ public class VideoPlayerView extends FrameLayout {
             return false;
         }
         maybeShowController(true);
+
         return true;
     }
 
@@ -611,6 +630,180 @@ public class VideoPlayerView extends FrameLayout {
         aspectRatioFrame.setResizeMode(resizeMode);
     }
 
+    /**
+     * ========================================屏幕手势监听 start===================================================
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_UP && isScroll) {
+            isScroll = false;
+            if (ObjectUtil.isNotNull(player)) {
+                player.seekTo(resumePosition);
+                player.setPlayWhenReady(true);
+                if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
+                    this.scrollProcessView.setVisibility(View.GONE);
+                }
+                Log.i(TAG, "changeProcessForScroll=end");
+            }
+
+        }
+        return gestureDetector.onTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        Log.i(TAG, "onDown");
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        Log.i(TAG, "onSingleTapUp");
+        if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
+            this.scrollProcessView.setVisibility(View.GONE);
+        }
+        if (!useController || player == null) {
+            return false;
+        }
+        if (!controllerBottom.isVisible()) {
+            maybeShowController(true);
+        } else if (controllerHideOnTouch) {
+            controllerBottom.hide();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.i(TAG, "onScroll");
+        isScroll = true;
+        if (e1.getX() - e2.getX() > FLIP_DISTANCE) {
+            changeProcessForScroll(e1, e2, false);
+
+            return true;
+        }
+        if (e2.getX() - e1.getX() > FLIP_DISTANCE) {
+            changeProcessForScroll(e1, e2, true);
+
+            return true;
+        }
+        if (e1.getY() - e2.getY() > FLIP_DISTANCE) {
+
+            return true;
+        }
+        if (e2.getY() - e1.getY() > FLIP_DISTANCE) {
+
+            return true;
+        }
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Log.i(TAG, "onFling");
+        return true;
+    }
+
+    private void changeProcessForScroll(MotionEvent e1, MotionEvent e2, boolean direction) {
+        if (ObjectUtil.isNotNull(player)) {
+
+            if (this.scrollProcessView.getVisibility() == View.GONE) {
+                this.scrollProcessView.setVisibility(View.VISIBLE);
+            }
+            player.setPlayWhenReady(false);
+            long duration = player.getDuration();
+            resumePosition = player.getCurrentPosition();
+            int p = 0;
+
+            if (ObjectUtil.isNotNull(this.changeProcessText)) {
+                String text = "";
+                if (direction) {
+                    p = (int) (((e2.getX() - e1.getX()) / FLIP_DISTANCE) * 1.8);
+                    text = "[+";
+                    if (p > 9) {
+                        int m = p / 60;
+                        if (m > 1) {
+                            if (m > 9) {
+                                text += m + ":" + (p - m * 60) + "]";
+                            } else {
+                                text += "0" + m + ":" + (p - m * 60) + "]";
+                            }
+                        } else {
+                            text += "00:" + p + "]";
+                        }
+                    } else {
+                        text += "00:0" + p + "]";
+                    }
+                    resumePosition += p * 1000;
+                    if (resumePosition > duration) {
+                        resumePosition = duration;
+                    }
+                } else {
+                    p = (int) (((e1.getX() - e2.getX()) / FLIP_DISTANCE) * 1.8);
+                    text = "[-";
+                    if (p > 9) {
+                        int m = p / 60;
+                        if (m > 1) {
+                            if (m > 9) {
+                                text += m + ":" + (p - m * 60) + "]";
+                            } else {
+                                text += "0" + m + ":" + (p - m * 60) + "]";
+                            }
+                        } else {
+                            text += "00:" + p + "]";
+                        }
+                    } else {
+                        text += "00:0" + p + "]";
+                    }
+                    resumePosition -= p * 1000;
+                    if (resumePosition < 0) {
+                        resumePosition = 0;
+                    }
+                }
+                this.changeProcessText.setText(text);
+            }
+            long currentPosition = resumePosition;
+            if (ObjectUtil.isNotNull(this.currentProcessText)) {
+                String text = "";
+                int dh = (int) (duration / (60 * 60 * 1000));
+                int h = (int) (currentPosition / (60 * 60 * 1000));
+                int m = (int) ((currentPosition - h * 60 * 60 * 1000) / (60 * 1000));
+                int s = (int) ((currentPosition - h * 60 * 60 * 1000 - m * 60 * 1000) / (1000));
+                if (dh > 0) {
+                    if (h > 9) {
+                        text += h + ":";
+                    } else {
+                        text += "0" + h + ":";
+                    }
+                }
+                if (m > 9) {
+                    text += m + ":";
+                } else {
+                    text += "0" + m + ":";
+                }
+                if (s > 9) {
+                    text += s;
+                } else {
+                    text += "0" + s;
+                }
+                this.currentProcessText.setText(text);
+            }
+        }
+    }
+
+    /**
+     * ========================================屏幕手势监听 end===================================================
+     */
     private final class ComponentListener implements SimpleExoPlayer.VideoListener,
             TextRenderer.Output, ExoPlayer.EventListener {
 
@@ -655,7 +848,10 @@ public class VideoPlayerView extends FrameLayout {
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            maybeShowController(false);
+            if(!isScroll){
+                maybeShowController(false);
+            }
+
         }
 
         @Override

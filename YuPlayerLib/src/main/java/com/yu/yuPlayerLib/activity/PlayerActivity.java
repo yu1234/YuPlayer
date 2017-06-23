@@ -350,23 +350,27 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
         }
     }
 
+    /**
+     * =========================================播放时间回调==========================================================
+     */
     @Override
     public void onTimelineChanged(Timeline timeline, Object manifest) {
-
+        Log.i(TAG, "player:onTimelineChanged");
     }
 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-
+        Log.i(TAG, "player:onTracksChanged");
     }
 
     @Override
     public void onLoadingChanged(boolean isLoading) {
-
+        Log.i(TAG, "player:onLoadingChanged");
     }
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        Log.i(TAG, "player:onPlayerStateChanged:"+"playWhenReady="+playWhenReady+":playbackState="+playbackState);
         if (playbackState == 4 && ObjectUtil.isNotNull(this.audioManager)) {
             this.audioManager.abandonAudioFocus(this);
         } else if (playWhenReady && playbackState == 3) {
@@ -376,6 +380,7 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
 
     @Override
     public void onPlayerError(ExoPlaybackException e) {
+        Log.i(TAG, "player:onPlayerError");
         String errorString = null;
         if (e.type == ExoPlaybackException.TYPE_RENDERER) {
             Exception cause = e.getRendererException();
@@ -412,14 +417,17 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
 
     @Override
     public void onPositionDiscontinuity() {
-
+        Log.i(TAG, "player:onPositionDiscontinuity");
     }
 
     @Override
     public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-
+        Log.i(TAG, "player:onPlaybackParametersChanged");
     }
 
+    /**
+     * =========================================播放时间回调==========================================================
+     */
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }

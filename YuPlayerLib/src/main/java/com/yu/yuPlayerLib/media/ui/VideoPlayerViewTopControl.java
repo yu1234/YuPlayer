@@ -93,7 +93,7 @@ public class VideoPlayerViewTopControl extends FrameLayout implements View.OnCli
     public void show() {
         if (!isVisible()) {
             setVisibility(VISIBLE);
-            ImmersionBar.with(this.activity).transparentStatusBar().navigationBarColor(android.R.color.black, 0f).titleBar(toolbar).hideBar(BarHide.FLAG_SHOW_BAR).init();
+            ImmersionBar.with(this.activity).transparentStatusBar().titleBar(toolbar).hideBar(BarHide.FLAG_SHOW_BAR).init();
 
         }
         // Call hideAfterTimeout even if already visible to reset the timeout.
