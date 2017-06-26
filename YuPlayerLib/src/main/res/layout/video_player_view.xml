@@ -35,38 +35,35 @@
         android:id="@+id/videoPlayerViewTopControl"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <!-- This library requires pair of the VerticalSeekBar and VerticalSeekBarWrapper classes -->
-    <com.yu.yuPlayerLib.media.ui.VerticalSeekBar
-        android:id="@+id/seedBarLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="180dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:paddingStart="28dp"
-        android:paddingEnd="28dp"
-        android:background="@android:color/transparent"
-        android:layout_gravity="left|center"
-        android:splitTrack="false"
-        android:maxHeight="2dp"
-        android:max="100"
-        android:progressDrawable="@drawable/play_seek_bar_bg"
-        android:thumb="@drawable/slider_thumb_normal" />
-    <com.yu.yuPlayerLib.media.ui.VerticalSeekBar
-        android:id="@+id/seedBarRight"
-        android:layout_width="wrap_content"
-        android:layout_height="180dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:paddingStart="28dp"
-        android:paddingEnd="28dp"
-        android:background="@android:color/transparent"
-        android:layout_gravity="right|center"
-        android:splitTrack="false"
-        android:maxHeight="2dp"
-        android:max="100"
-        android:progressDrawable="@drawable/play_seek_bar_bg"
-        android:thumb="@drawable/slider_thumb_normal"
-        />
+
+    <FrameLayout android:id="@+id/operation_volume_brightness"
+         android:layout_centerInParent="true"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:background="#00000000" android:orientation="horizontal"
+        android:padding="0dip"
+        android:layout_gravity="center"
+        android:visibility="gone">
+        <ImageView android:id="@+id/operation_bg"
+            android:layout_gravity="center" android:src="@drawable/video_volumn_bg"
+            android:layout_width="150dp" android:layout_height="150dp" />
+        <FrameLayout android:layout_gravity="bottom|center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="25dip"
+            android:orientation="horizontal">
+
+            <ImageView android:id="@+id/operation_full"
+                android:layout_gravity="left"
+                android:src="@drawable/video_num_bg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="matrix"/>
+            <ImageView android:id="@+id/operation_percent"
+                android:layout_gravity="left" android:src="@drawable/video_num_front"
+                android:layout_width="0dip" android:layout_height="wrap_content"
+                android:scaleType="matrix" />
+        </FrameLayout>
+    </FrameLayout>
     <LinearLayout
         android:id="@+id/scrollProcessView"
         android:layout_width="wrap_content"

@@ -1,6 +1,7 @@
 package com.yu.yuPlayerLib.media.ui;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -20,6 +21,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -68,10 +70,12 @@ public class VideoPlayerView extends FrameLayout {
     TextView currentProcessText;
     @BindView(R2.id.changeProcessText)
     TextView changeProcessText;
-    @BindView(R2.id.seedBarLeft)
-    VerticalSeekBar seedBarLeft;
-    @BindView(R2.id.seedBarRight)
-    VerticalSeekBar seedBarRight;
+    @BindView(R2.id.operation_volume_brightness)
+    FrameLayout operationVolumeOrBrightness;
+    @BindView(R2.id.operation_bg)
+    ImageView mOperationBg;
+    @BindView(R2.id.operation_percent)
+    ImageView mOperationPercent;
     /**
      * =================控件注入 end=====================
      */
@@ -106,6 +110,9 @@ public class VideoPlayerView extends FrameLayout {
 
     public AudioManager audioManager;
     private int maxVolume, currentVolume;
+    /** 当前亮度 */
+    private float mBrightness = -1f;
+    private Activity activity;
 
     public VideoPlayerView(Context context) {
         this(context, null);
@@ -117,6 +124,7 @@ public class VideoPlayerView extends FrameLayout {
 
     public VideoPlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        this.activity= (Activity) context;
         if (isInEditMode()) {
             contentFrame = null;
             shutterView = null;
@@ -223,29 +231,7 @@ public class VideoPlayerView extends FrameLayout {
         //音量调节
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
-        seedBarLeft.setMax(maxVolume);
-        currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);  //获取当前值
-        seedBarLeft.setProgress(currentVolume);
 
-        seedBarLeft.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() //调音监听器
-        {
-            public void onProgressChanged(SeekBar arg0,int progress,boolean fromUser)
-            {
-                Log.i(TAG,"progress:"+progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
-            }
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
-
-            }
-        });
     }
 
     /**
@@ -688,16 +674,8 @@ public class VideoPlayerView extends FrameLayout {
                 if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
                     Log.i(TAG, "右半屏，向上滑");
                 } else {
-                    Log.i(TAG, "左半屏，向上滑");
-                    maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
-                    seedBarLeft.setMax(maxVolume);
-                    int progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                    currentVolume=  progress = progress + (int) (((e1.getY() - e2.getY()) / FLIP_DISTANCE)*0.2);
-                    if (progress > maxVolume) {
-                        progress = maxVolume;
-                    }
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
-                    seedBarLeft.setProgress(progress);
+                    onVolumeSlide((e1.getY() - e2.getY() ) / VideoPlayerView.this.getHeight());
+
                 }
                 return true;
             }
@@ -705,16 +683,7 @@ public class VideoPlayerView extends FrameLayout {
                 if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
                     Log.i(TAG, "右半屏，向下滑");
                 } else {
-                    Log.i(TAG, "左半屏，向下滑");
-                    maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
-                    seedBarLeft.setMax(maxVolume);
-                    int progress =audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                    currentVolume=  progress = progress - (int) (((e2.getY() - e1.getY()) / FLIP_DISTANCE)*0.2);
-                    if (progress < 0) {
-                        progress = 0;
-                    }
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
-                    seedBarLeft.setProgress(progress);
+                    onVolumeSlide((e1.getY() - e2.getY() ) / VideoPlayerView.this.getHeight());
                 }
                 return true;
             }
@@ -740,7 +709,6 @@ public class VideoPlayerView extends FrameLayout {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            seedBarLeft.setProgress(seedBarLeft.getProgress());
             return true;
         }
 
@@ -751,6 +719,7 @@ public class VideoPlayerView extends FrameLayout {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
             return true;
         }
 
@@ -874,6 +843,68 @@ public class VideoPlayerView extends FrameLayout {
                 }
             }
         }
+    }
+
+    /**
+     * 滑动改变声音大小
+     *
+     * @param percent
+     */
+    private void onVolumeSlide(float percent) {
+        if (currentVolume == -1) {
+            currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            if (currentVolume < 0)
+                currentVolume = 0;
+
+            // 显示
+            mOperationBg.setImageResource(R.drawable.video_volumn_bg);
+            operationVolumeOrBrightness.setVisibility(View.VISIBLE);
+        }
+
+        int index = (int) (percent * maxVolume) + currentVolume;
+        if (index > maxVolume)
+            index = maxVolume;
+        else if (index < 0)
+            index = 0;
+
+        // 变更声音
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0);
+
+        // 变更进度条
+        ViewGroup.LayoutParams lp = mOperationPercent.getLayoutParams();
+        lp.width = findViewById(R.id.operation_full).getLayoutParams().width
+                * index / maxVolume;
+        mOperationPercent.setLayoutParams(lp);
+    }
+
+    /**
+     * 滑动改变亮度
+     *
+     * @param percent
+     */
+    private void onBrightnessSlide(float percent) {
+        if (mBrightness < 0) {
+            mBrightness = activity.getWindow().getAttributes().screenBrightness;
+            if (mBrightness <= 0.00f)
+                mBrightness = 0.50f;
+            if (mBrightness < 0.01f)
+                mBrightness = 0.01f;
+
+            // 显示
+            mOperationBg.setImageResource(R.drawable.video_brightness_bg);
+            operationVolumeOrBrightness.setVisibility(View.VISIBLE);
+        }
+        WindowManager.LayoutParams lpa = activity.getWindow().getAttributes();
+        lpa.screenBrightness = mBrightness + percent;
+        if (lpa.screenBrightness > 1.0f)
+            lpa.screenBrightness = 1.0f;
+        else if (lpa.screenBrightness < 0.01f)
+            lpa.screenBrightness = 0.01f;
+        activity.getWindow().setAttributes(lpa);
+
+        ViewGroup.LayoutParams lp = mOperationPercent.getLayoutParams();
+        lp.width = (int) (findViewById(R.id.operation_full).getLayoutParams().width * lpa.screenBrightness);
+        mOperationPercent.setLayoutParams(lp);
     }
 
     @Override
