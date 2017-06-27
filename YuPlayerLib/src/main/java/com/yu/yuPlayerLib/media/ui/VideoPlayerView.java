@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.media.AudioManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -74,6 +75,8 @@ public class VideoPlayerView extends FrameLayout {
     FrameLayout operationVolumeOrBrightness;
     @BindView(R2.id.operation_bg)
     ImageView mOperationBg;
+    @BindView(R2.id.operation_full)
+    ImageView operationFull;
     @BindView(R2.id.operation_percent)
     ImageView mOperationPercent;
     /**
@@ -109,8 +112,10 @@ public class VideoPlayerView extends FrameLayout {
     private long resumePosition;
 
     public AudioManager audioManager;
-    private int maxVolume, currentVolume;
-    /** 当前亮度 */
+    private int maxVolume, currentVolume = -1, height, width;
+    /**
+     * 当前亮度
+     */
     private float mBrightness = -1f;
     private Activity activity;
 
@@ -124,7 +129,7 @@ public class VideoPlayerView extends FrameLayout {
 
     public VideoPlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        this.activity= (Activity) context;
+        this.activity = (Activity) context;
         if (isInEditMode()) {
             contentFrame = null;
             shutterView = null;
@@ -231,6 +236,14 @@ public class VideoPlayerView extends FrameLayout {
         //音量调节
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
+        //获取屏幕高度
+        WindowManager wm = (WindowManager) this.activity.getSystemService(Context.WINDOW_SERVICE);
+        Point point = new Point();
+        wm.getDefaultDisplay().getSize(point);
+        this.width = point.x;//屏幕宽度
+        this.height = point.y;//屏幕高度
+
+        Log.i(TAG, operationFull.getWidth() + "==  operationFull.getLayoutParams().width ===");
 
     }
 
@@ -672,18 +685,18 @@ public class VideoPlayerView extends FrameLayout {
             }
             if (e1.getY() - e2.getY() > FLIP_DISTANCE) {
                 if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
-                    Log.i(TAG, "右半屏，向上滑");
+                    onVolumeSlide(e1.getY() - e2.getY());
                 } else {
-                    onVolumeSlide((e1.getY() - e2.getY() ) / VideoPlayerView.this.getHeight());
+                    onBrightnessSlide(e1.getY() - e2.getY());
 
                 }
                 return true;
             }
             if (e2.getY() - e1.getY() > FLIP_DISTANCE) {
                 if (e1.getX() > (VideoPlayerView.this.getWidth() / 2)) {
-                    Log.i(TAG, "右半屏，向下滑");
+                    onVolumeSlide(e1.getY() - e2.getY());
                 } else {
-                    onVolumeSlide((e1.getY() - e2.getY() ) / VideoPlayerView.this.getHeight());
+                    onBrightnessSlide(e1.getY() - e2.getY());
                 }
                 return true;
             }
@@ -848,20 +861,27 @@ public class VideoPlayerView extends FrameLayout {
     /**
      * 滑动改变声音大小
      *
-     * @param percent
+     * @param distanceY
      */
-    private void onVolumeSlide(float percent) {
+    private void onVolumeSlide(float distanceY) {
+        // 显示
         if (currentVolume == -1) {
+            isScroll = true;
+            mOperationBg.setImageResource(R.drawable.video_volumn_bg);
+            operationVolumeOrBrightness.setVisibility(View.VISIBLE);
             currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
             if (currentVolume < 0)
                 currentVolume = 0;
-
-            // 显示
-            mOperationBg.setImageResource(R.drawable.video_volumn_bg);
-            operationVolumeOrBrightness.setVisibility(View.VISIBLE);
+            //初始进度条
+            ViewGroup.LayoutParams lp = mOperationPercent.getLayoutParams();
+            lp.width = operationFull.getWidth() * currentVolume / maxVolume;
+            mOperationPercent.setLayoutParams(lp);
         }
-
-        int index = (int) (percent * maxVolume) + currentVolume;
+        maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //获取系统最大音量
+        if (currentVolume < 0)
+            currentVolume = 0;
+        int percent = (int) (distanceY / ((float) this.height / maxVolume));
+        int index = percent + currentVolume;
         if (index > maxVolume)
             index = maxVolume;
         else if (index < 0)
@@ -869,21 +889,20 @@ public class VideoPlayerView extends FrameLayout {
 
         // 变更声音
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0);
-
         // 变更进度条
         ViewGroup.LayoutParams lp = mOperationPercent.getLayoutParams();
-        lp.width = findViewById(R.id.operation_full).getLayoutParams().width
-                * index / maxVolume;
+        lp.width = operationFull.getWidth() * index / maxVolume;
         mOperationPercent.setLayoutParams(lp);
     }
 
     /**
      * 滑动改变亮度
      *
-     * @param percent
+     * @param distanceY
      */
-    private void onBrightnessSlide(float percent) {
+    private void onBrightnessSlide(float distanceY) {
         if (mBrightness < 0) {
+            isScroll = true;
             mBrightness = activity.getWindow().getAttributes().screenBrightness;
             if (mBrightness <= 0.00f)
                 mBrightness = 0.50f;
@@ -895,6 +914,7 @@ public class VideoPlayerView extends FrameLayout {
             operationVolumeOrBrightness.setVisibility(View.VISIBLE);
         }
         WindowManager.LayoutParams lpa = activity.getWindow().getAttributes();
+        float percent = distanceY / height;
         lpa.screenBrightness = mBrightness + percent;
         if (lpa.screenBrightness > 1.0f)
             lpa.screenBrightness = 1.0f;
@@ -903,7 +923,7 @@ public class VideoPlayerView extends FrameLayout {
         activity.getWindow().setAttributes(lpa);
 
         ViewGroup.LayoutParams lp = mOperationPercent.getLayoutParams();
-        lp.width = (int) (findViewById(R.id.operation_full).getLayoutParams().width * lpa.screenBrightness);
+        lp.width = (int)(operationFull.getWidth() * lpa.screenBrightness);
         mOperationPercent.setLayoutParams(lp);
     }
 
@@ -911,16 +931,27 @@ public class VideoPlayerView extends FrameLayout {
     public boolean onTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_UP && isScroll) {
             isScroll = false;
-            if (ObjectUtil.isNotNull(player)) {
-                player.seekTo(resumePosition);
-                player.setPlayWhenReady(true);
-                if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
-                    this.scrollProcessView.setVisibility(View.GONE);
-                }
-            }
+            endGesture();
 
         }
         return gestureDetector.onTouchEvent(ev);
+    }
+
+    /**
+     * 手势结束
+     */
+    private void endGesture() {
+        currentVolume = -1;
+        mBrightness = -1f;
+        // 隐藏
+        operationVolumeOrBrightness.setVisibility(View.GONE);
+        if (ObjectUtil.isNotNull(player) && !player.getPlayWhenReady()) {
+            player.seekTo(resumePosition);
+            player.setPlayWhenReady(true);
+            if (this.scrollProcessView.getVisibility() == View.VISIBLE) {
+                this.scrollProcessView.setVisibility(View.GONE);
+            }
+        }
     }
 
     /**
