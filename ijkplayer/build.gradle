@@ -1,15 +1,17 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
+
     defaultConfig {
-        applicationId "com.yu.player"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         release {
@@ -25,16 +27,13 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.android.support:design:25.3.1'
     testCompile 'junit:junit:4.12'
-    compile 'com.xiaoleilu:hutool-all:3.0.7'
-    compile project(':exoplayer')
-    compile project(':ijkplayer')
-    //Rxjava + Rxandroid
-    compile 'io.reactivex:rxandroid:1.2.0'
-    compile 'io.reactivex:rxjava:1.1.5'
-    compile 'com.facebook.fresco:fresco:0.12.0'
-    compile 'com.facebook.fresco:animated-webp:0.12.0'
-    compile 'com.facebook.fresco:webpsupport:0.12.0'
+
+    compile 'tv.danmaku.ijk.media:ijkplayer-java:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-armv5:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.0'
+    compile 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.0'
 }

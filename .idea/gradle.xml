@@ -8,8 +8,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/YuPlayerLib" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/exoplayer" />
+            <option value="$PROJECT_DIR$/ijkplayer" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

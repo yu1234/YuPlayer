@@ -1,1 +1,1 @@
-include ':app', ':YuPlayerLib'
+include ':app', ':exoplayer', ':ijkplayer'
