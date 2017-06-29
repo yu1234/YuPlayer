@@ -127,31 +127,31 @@ public class MainActivity extends AppCompatActivity implements MediaScannerConne
         index++;
         ContentResolver contentResolver = this.getContentResolver();
         Cursor cursor = contentResolver.query(uri, null, null, null, null);
-        if (ObjectUtil.isNotNull(cursor)) {
-            while (cursor.moveToNext()) {
-                //获取id
-                long mId = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns._ID));
-                //获取名称
-                String name = cursor.getString(cursor.getColumnIndex(MediaStore.Video.VideoColumns.TITLE));
-                //获取大小
-                long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns.SIZE));
-                String formatSize = FileUtils.formatFileSize(size);
-                //获取时长
-                String formatDuration = FileUtils.formatDuration(this, uri);
-                //获取mime_type
-                String mimeType = cursor.getString(cursor.getColumnIndex(MediaStore.Video.VideoColumns.MIME_TYPE));
-                //获取缩略图
-                Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND);
-                VideoFile videoFile = new VideoFile();
-                videoFile.setmId(mId);
-                videoFile.setName(name);
-                videoFile.setFormatSize(formatSize);
-                videoFile.setFormatDuration(formatDuration);
-                videoFile.setMimeType(mimeType);
-                videoFile.setThumbnails(thumbnail);
-                videoFile.setUri(uri);
-                this.videoFiles.add(videoFile);
-            }
+        File file = new File(path);
+        if (ObjectUtil.isNotNull(cursor) && cursor.moveToFirst()) {
+            //获取id
+            long mId = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns._ID));
+            //获取名称
+            String name = file.getName();
+            //获取大小
+            long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns.SIZE));
+            String formatSize = FileUtils.formatFileSize(size);
+            //获取时长
+            String formatDuration = FileUtils.formatDuration(this, uri);
+            //获取mime_type
+            String mimeType = cursor.getString(cursor.getColumnIndex(MediaStore.Video.VideoColumns.MIME_TYPE));
+            //获取缩略图
+            Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND);
+            VideoFile videoFile = new VideoFile();
+            videoFile.setmId(mId);
+            videoFile.setName(name);
+            videoFile.setFormatSize(formatSize);
+            videoFile.setFormatDuration(formatDuration);
+            videoFile.setMimeType(mimeType);
+            videoFile.setThumbnails(thumbnail);
+            videoFile.setUri(uri);
+            this.videoFiles.add(videoFile);
+
         }
         if (index >= files.size()) {
             Message msg = mHandler.obtainMessage();
