@@ -1,29 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <FrameLayout
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_marginLeft="10dp">
-        <com.facebook.drawee.view.SimpleDraweeView
-            android:id="@+id/SimpleDraweeView"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            fresco:placeholderImage="@drawable/ic_live_tv_white_48dp"
-            fresco:roundedCornerRadius="200dp"
-            android:background="@color/lightGray"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:text="00:00"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:background="@android:color/black"/>
-    </FrameLayout>
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_margin="10dp">
 
+    <ImageView
+        android:id="@+id/videoThumbnails"
+        android:layout_width="96dp"
+        android:layout_height="64dp"
+        android:background="@color/lightGray"
+        android:src="@drawable/ic_live_tv_white_48dp"
+        android:scaleType="center"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/videoFileTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="title"
+            android:layout_marginLeft="10dp"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:layout_weight="1"
+            android:gravity="left|center"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:id="@+id/duration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right|bottom"
+            android:layout_alignRight="@id/videoFileTitle"
+            android:text="00:00"
+            android:textColor="@android:color/black"
+            android:textSize="14sp" />
+    </LinearLayout>
 
 </LinearLayout>

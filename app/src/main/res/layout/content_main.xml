@@ -6,8 +6,23 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.yu.player.MainActivity"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    android:id="@+id/lay_root">
 
-   <include layout="@layout/video_file_list_item"></include>
+    <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/loading"
+        style="@style/AVLoadingIndicatorView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        android:layout_gravity="center"
+        app:indicatorColor="@color/colorAccent"
+        app:indicatorName="BallClipRotatePulseIndicator"
+        app:layout_constraintBottom_toBottomOf="@id/lay_root"
+        app:layout_constraintLeft_toLeftOf="@+id/lay_root"
+        app:layout_constraintRight_toRightOf="@+id/lay_root"
+        app:layout_constraintTop_toTopOf="@id/lay_root"
+        />
+    <include layout="@layout/video_file_list"></include>
 
 </android.support.constraint.ConstraintLayout>

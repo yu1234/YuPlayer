@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
@@ -47,14 +50,17 @@ import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 import com.gyf.barlibrary.ImmersionBar;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.exoplayer.R;
 import com.yu.exoplayer.R2;
-import com.yu.exoplayer.global.PlayerLibApplication;
 import com.yu.exoplayer.log.EventLogger;
 import com.yu.exoplayer.media.ui.VideoPlayerView;
+import com.yu.exoplayer.utils.PlayerUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -72,12 +78,14 @@ import static android.R.attr.targetSdkVersion;
 public class PlayerActivity extends AppCompatActivity implements ExoPlayer.EventListener, AudioManager.OnAudioFocusChangeListener {
     private final static String TAG = PlayerActivity.class.getSimpleName();
     private static PlayerActivity instance;
-
+    protected String userAgent;
     /**
      * =================控件注入 start=====================
      */
     @BindView(R2.id.videoPlayerView)
     VideoPlayerView videoPlayerView;
+    @BindView(R2.id.toolbar_title)
+    TextView toolbarTitle;
     /**
      * =================控件注入 end=====================
      */
@@ -107,6 +115,7 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
         instance = this;
         shouldAutoPlay = true;
         clearResumePosition();
@@ -119,6 +128,7 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
         ButterKnife.bind(this);
         videoPlayerView.requestFocus();
         this.audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
     }
 
     public PlayerActivity getInstance() {
@@ -208,60 +218,61 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
      */
     private void initPlayer() {
         Intent intent = getIntent();
-        boolean needNewPlayer = simpleExoPlayer == null;
-        if (needNewPlayer) {
-            TrackSelection.Factory adaptiveTrackSelectionFactory =
-                    new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
-            trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
-            eventLogger = new EventLogger(trackSelector);
+        Uri uri = intent.getData();
+        if (ObjectUtil.isNotNull(uri)) {
+            boolean needNewPlayer = simpleExoPlayer == null;
+            if (needNewPlayer) {
+                TrackSelection.Factory adaptiveTrackSelectionFactory =
+                        new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
+                trackSelector = new DefaultTrackSelector(adaptiveTrackSelectionFactory);
+                eventLogger = new EventLogger(trackSelector);
 
-            DefaultRenderersFactory rendersFactory = new DefaultRenderersFactory(this,
-                    null, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
+                DefaultRenderersFactory rendersFactory = new DefaultRenderersFactory(this,
+                        null, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
 
-            simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(rendersFactory, trackSelector);
-            simpleExoPlayer.addListener(this);
-            simpleExoPlayer.addListener(eventLogger);
-            simpleExoPlayer.setAudioDebugListener(eventLogger);
-            simpleExoPlayer.setVideoDebugListener(eventLogger);
-            simpleExoPlayer.setMetadataOutput(eventLogger);
+                simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(rendersFactory, trackSelector);
+                simpleExoPlayer.addListener(this);
+                simpleExoPlayer.addListener(eventLogger);
+                simpleExoPlayer.setAudioDebugListener(eventLogger);
+                simpleExoPlayer.setVideoDebugListener(eventLogger);
+                simpleExoPlayer.setMetadataOutput(eventLogger);
 
-            videoPlayerView.setPlayer(simpleExoPlayer);
-            simpleExoPlayer.setPlayWhenReady(shouldAutoPlay);
+                videoPlayerView.setPlayer(simpleExoPlayer);
+                simpleExoPlayer.setPlayWhenReady(shouldAutoPlay);
+            }
+            if (needNewPlayer) {
+               String title= PlayerUtil.getTitle(this,uri);
+                toolbarTitle.setText(title);
+                Uri[] uris;
+                uris = new Uri[]{uri};
+                if (Util.maybeRequestReadExternalStoragePermission(this, uris)) {
+                    // The player will be reinitialized if the permission is granted.
+                    return;
+                }
+                MediaSource[] mediaSources = new MediaSource[uris.length];
+                for (int i = 0; i < uris.length; i++) {
+                    mediaSources[i] = buildMediaSource(uris[i], null);
+                }
+                MediaSource mediaSource = mediaSources.length == 1 ? mediaSources[0]
+                        : new ConcatenatingMediaSource(mediaSources);
+                boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
+                if (haveResumePosition) {
+                    simpleExoPlayer.seekTo(resumeWindow, resumePosition);
+                }
+                if (this.requestAudioFocus()) {
+                    simpleExoPlayer.prepare(mediaSource, !haveResumePosition, false);
+                }
+
+            }
         }
-        if (needNewPlayer) {
 
-            Uri[] uris;
-
-            //TODO 测试视频路径
-            String path = Environment.getExternalStorageDirectory().getPath() + File.separator + "test.mp4";
-            Uri data = Uri.parse(path);
-            uris = new Uri[]{data};
-            if (Util.maybeRequestReadExternalStoragePermission(this, uris)) {
-                // The player will be reinitialized if the permission is granted.
-                return;
-            }
-            MediaSource[] mediaSources = new MediaSource[uris.length];
-            for (int i = 0; i < uris.length; i++) {
-                mediaSources[i] = buildMediaSource(uris[i], null);
-            }
-            MediaSource mediaSource = mediaSources.length == 1 ? mediaSources[0]
-                    : new ConcatenatingMediaSource(mediaSources);
-            boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
-            if (haveResumePosition) {
-                simpleExoPlayer.seekTo(resumeWindow, resumePosition);
-            }
-            if (this.requestAudioFocus()) {
-                simpleExoPlayer.prepare(mediaSource, !haveResumePosition, false);
-            }
-
-        }
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults != null&&grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults != null && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
             requestPermissions();
 
@@ -325,8 +336,16 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
      * @return A new DataSource factory.
      */
     private DataSource.Factory buildDataSourceFactory(boolean useBandwidthMeter) {
-        return ((PlayerLibApplication) getApplication())
-                .buildDataSourceFactory(useBandwidthMeter ? BANDWIDTH_METER : null);
+        return this.buildDataSourceFactory(useBandwidthMeter ? BANDWIDTH_METER : null);
+    }
+
+    public DataSource.Factory buildDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
+        return new DefaultDataSourceFactory(this, bandwidthMeter,
+                buildHttpDataSourceFactory(bandwidthMeter));
+    }
+
+    public HttpDataSource.Factory buildHttpDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
+        return new DefaultHttpDataSourceFactory(userAgent, bandwidthMeter);
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
@@ -370,7 +389,7 @@ public class PlayerActivity extends AppCompatActivity implements ExoPlayer.Event
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        Log.i(TAG, "player:onPlayerStateChanged:"+"playWhenReady="+playWhenReady+":playbackState="+playbackState);
+        Log.i(TAG, "player:onPlayerStateChanged:" + "playWhenReady=" + playWhenReady + ":playbackState=" + playbackState);
         if (playbackState == 4 && ObjectUtil.isNotNull(this.audioManager)) {
             this.audioManager.abandonAudioFocus(this);
         } else if (playWhenReady && playbackState == 3) {

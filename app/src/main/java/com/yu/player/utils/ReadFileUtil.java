@@ -18,6 +18,7 @@ import rx.schedulers.Schedulers;
  */
 
 public class ReadFileUtil {
+    private long videoFileMinSize = 1024 * 1024 * 10;
     //单例模式
     private static volatile ReadFileUtil instance;
     //自定义文件过滤器
@@ -28,7 +29,12 @@ public class ReadFileUtil {
         public boolean doFilter(File file, ReadFileUtil.FileType fileType) {
             if (ObjectUtil.isNotNull(file) && file.exists() && file.canRead() && file.isFile()) {
                 if (FileType.VOIDEO == fileType) {
-                    return FileUtils.isVideo(file);
+                    if (FileUtils.isVideo(file)) {
+                        if (file.length() > videoFileMinSize) {
+                            return true;
+                        }
+                    }
+
                 } else if (FileType.MUSIC == fileType) {
                     return FileUtils.isAudio(file);
                 } else if (FileType.PICTURE == fileType) {
@@ -46,7 +52,7 @@ public class ReadFileUtil {
     private ReadFileUtil() {
     }
 
-    public static ReadFileUtil getInstance(){
+    public static ReadFileUtil getInstance() {
         if (instance == null) {                         //Single Checked
             synchronized (ReadFileUtil.class) {
                 if (instance == null) {                 //Double Checked
@@ -54,7 +60,7 @@ public class ReadFileUtil {
                 }
             }
         }
-        return instance ;
+        return instance;
     }
 
     //获取指定类型文件
