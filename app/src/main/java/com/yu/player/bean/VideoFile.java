@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 public class VideoFile extends File {
     private Bitmap thumbnails;
     private String formatDuration;
+    private boolean isNew;//是否是新添加
+
 
     public String getFormatDuration() {
         return formatDuration;
@@ -24,5 +26,13 @@ public class VideoFile extends File {
 
     public void setThumbnails(Bitmap thumbnails) {
         this.thumbnails = thumbnails;
+    }
+
+    public boolean isNew() {
+        return isNew;
+    }
+
+    public void setNew(boolean aNew) {
+        isNew = aNew;
     }
 }
