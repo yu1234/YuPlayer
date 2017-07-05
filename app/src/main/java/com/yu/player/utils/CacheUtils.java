@@ -14,6 +14,8 @@ import com.yu.player.bean.VideoFile;
 import com.yu.player.dao.CommonDao;
 
 import java.io.File;
+import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -31,18 +33,39 @@ public class CacheUtils {
             queryBuilder.orderBy("name", false);
             videoFiles = videoFileDao.query(queryBuilder);
             if (CollectionUtil.isNotEmpty(videoFiles)) {
-                for (VideoFile videoFile : videoFiles) {
-                    //获取缩略图
-                    Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(videoFile.getPath(), MediaStore.Video.Thumbnails.MINI_KIND);
-                    videoFile.setThumbnails(thumbnail);
-                    //获取Uri
-                    if (StrUtil.isNotBlank(videoFile.getUriStr())) {
-                        Uri uri = Uri.parse(videoFile.getUriStr());
-                        videoFile.setUri(uri);
+                Iterator<VideoFile> iterator = videoFiles.iterator();
+                while (iterator.hasNext()) {
+                    VideoFile videoFile = iterator.next();
+                    if (StrUtil.isNotBlank(videoFile.getPath())) {
+                        File file = new File(videoFile.getPath());
+                        if(file.exists()){
+                            //获取缩略图
+                            Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(videoFile.getPath(), MediaStore.Video.Thumbnails.MINI_KIND);
+                            videoFile.setThumbnails(thumbnail);
+                            //获取Uri
+                            if (StrUtil.isNotBlank(videoFile.getUriStr())) {
+                                Uri uri = Uri.parse(videoFile.getUriStr());
+                                videoFile.setUri(uri);
 
 
+                            }
+                        }else {
+                            try {
+                                videoFileDao.getDao().delete(videoFile);
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                            iterator.remove();
+
+                        }
+                    } else {
+                        try {
+                            videoFileDao.getDao().delete(videoFile);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        iterator.remove();
                     }
-
                 }
             }
         }

@@ -65,22 +65,27 @@ public class ReadFileUtil {
 
     //获取指定类型文件
     public void getFiles(final FileType fileType, Subscriber<File> subscriber) {
-        if (ObjectUtil.isNotNull(fileType) && ObjectUtil.isNotNull(subscriber)) {
-            File rootFile = Environment.getExternalStorageDirectory();
-            if (ObjectUtil.isNotNull(rootFile)) {
-                Observable.just(rootFile)
-                        .flatMap(new Func1<File, Observable<File>>() {
-                            @Override
-                            public Observable<File> call(File file) {
-                                Observable<File> fileObservable = listFiles(fileType, file);
-                                return fileObservable;
-                            }
-                        })
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(subscriber);
+        try{
+            if (ObjectUtil.isNotNull(fileType) && ObjectUtil.isNotNull(subscriber)) {
+                File rootFile = Environment.getExternalStorageDirectory();
+                if (ObjectUtil.isNotNull(rootFile)) {
+                    Observable.just(rootFile)
+                            .flatMap(new Func1<File, Observable<File>>() {
+                                @Override
+                                public Observable<File> call(File file) {
+                                    Observable<File> fileObservable = listFiles(fileType, file);
+                                    return fileObservable;
+                                }
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.newThread())
+                            .subscribe(subscriber);
+                }
             }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
     }
 
     /**

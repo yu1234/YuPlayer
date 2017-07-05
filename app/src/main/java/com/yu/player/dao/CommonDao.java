@@ -81,7 +81,7 @@ public class CommonDao<T extends BaseBean> {
     }
 
     /**
-     * 删除一条信息
+     * 批量删除信息
      *
      * @return
      */

@@ -31,10 +31,10 @@ import rx.Subscriber;
  * Created by igreentree on 2017/7/4 0004.
  */
 
-public class VideoSubscriber<T extends File> extends Subscriber<T> implements MediaScannerConnection.MediaScannerConnectionClient {
+public class VideoSubscriber<T extends File>  implements MediaScannerConnection.MediaScannerConnectionClient {
     private final static String TAG = VideoSubscriber.class.getSimpleName();
     private static volatile VideoSubscriber instance;
-    private List<T> ts = new ArrayList<T>();
+    private  List<T> ts = new ArrayList<T>();
     private List<VideoFile> videoFiles = new ArrayList<VideoFile>();
     //回调接口
     private SubscriberCompletedImpl<T> subscriberCompleted;
@@ -45,8 +45,9 @@ public class VideoSubscriber<T extends File> extends Subscriber<T> implements Me
     private Context context;
     private MediaScannerConnection mediaScannerConnection;
     private int index;
+    private Subscriber subscriber;
     //完成标志
-    private boolean flag;
+    private static boolean flag;
 
     //实例化对象
     public static VideoSubscriber getInstance(Context context) {
@@ -71,41 +72,7 @@ public class VideoSubscriber<T extends File> extends Subscriber<T> implements Me
         flag = true;
     }
 
-    @Override
-    public void onCompleted() {
-        Log.i(TAG, "VideoSubscriber.onCompleted");
-        if (CollectionUtil.isNotEmpty(ts)) {
-            //发出更新媒体库连接
-            mediaScannerConnection.connect();
-        } else {
-            scanCompleted();
-        }
-        if (ObjectUtil.isNotNull(subscriberCompleted)) {
-            subscriberCompleted.onCompleted(ts);
-        }
-    }
 
-    @Override
-    public void onError(Throwable e) {
-        Log.e(TAG, "VideoSubscriber.onError", e);
-        if (ObjectUtil.isNotNull(subscriberError)) {
-            subscriberError.onError(e);
-        }
-
-    }
-
-    @Override
-    public void onNext(T t) {
-        Log.i(TAG, "VideoSubscriber.onNext");
-        if (ObjectUtil.isNotNull(t)) {
-            if (ObjectUtil.isNotNull(ts)) {
-                ts.add(t);
-            }
-        }
-        if (ObjectUtil.isNotNull(subscriberNext)) {
-            subscriberNext.onNext(t);
-        }
-    }
 
     @Override
     public void onMediaScannerConnected() {
@@ -170,9 +137,13 @@ public class VideoSubscriber<T extends File> extends Subscriber<T> implements Me
     private void scanCompleted() {
         Log.i(TAG, "VideoSubscriber.scanCompleted");
         //重置flag
-        flag = true;
+        this.flag = true;
         //更新数据库
         updateVideoFileTable();
+        //解除绑定
+        if(ObjectUtil.isNotNull(subscriber)&&subscriber.isUnsubscribed()){
+            subscriber.unsubscribe();
+        }
         //完成回调
         if (ObjectUtil.isNotNull(this.scanFileCompleted)) {
             this.scanFileCompleted.onScanCompleted(CacheUtils.getVideoFileCache(this.context));
@@ -222,14 +193,54 @@ public class VideoSubscriber<T extends File> extends Subscriber<T> implements Me
      */
     public void startScan() {
         Log.i(TAG, "VideoSubscriber.startScan");
-        if (flag) {
+        Log.i(TAG, "VideoSubscriber.startScan:" + this.flag);
+        if (this.flag) {
             //初始化缓存变量
             ts.clear();
             videoFiles.clear();
-            flag = false;
+            this.flag = false;
             //开始扫描
             ReadFileUtil readFileUtil = ReadFileUtil.getInstance();
-            readFileUtil.getFiles(ReadFileUtil.FileType.VOIDEO, instance);
+            this.subscriber=new MySubscriber();
+            readFileUtil.getFiles(ReadFileUtil.FileType.VOIDEO,this.subscriber);
+        }
+    }
+
+    class MySubscriber extends Subscriber<T>{
+        @Override
+        public void onCompleted() {
+            Log.i(TAG, "VideoSubscriber.onCompleted");
+            if (CollectionUtil.isNotEmpty(ts)) {
+                //发出更新媒体库连接
+                mediaScannerConnection.connect();
+            } else {
+                scanCompleted();
+            }
+            if (ObjectUtil.isNotNull(subscriberCompleted)) {
+                subscriberCompleted.onCompleted(ts);
+            }
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            Log.e(TAG, "VideoSubscriber.onError", e);
+            if (ObjectUtil.isNotNull(subscriberError)) {
+                subscriberError.onError(e);
+            }
+
+        }
+
+        @Override
+        public void onNext(T t) {
+            Log.i(TAG, "VideoSubscriber.onNext");
+            if (ObjectUtil.isNotNull(t)) {
+                if (ObjectUtil.isNotNull(ts)) {
+                    ts.add(t);
+                }
+            }
+            if (ObjectUtil.isNotNull(subscriberNext)) {
+                subscriberNext.onNext(t);
+            }
         }
     }
 
