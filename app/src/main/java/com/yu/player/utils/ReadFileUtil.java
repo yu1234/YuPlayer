@@ -70,6 +70,8 @@ public class ReadFileUtil {
                 File rootFile = Environment.getExternalStorageDirectory();
                 if (ObjectUtil.isNotNull(rootFile)) {
                     Observable.just(rootFile)
+                            .observeOn(Schedulers.io())
+                            .subscribeOn(Schedulers.newThread())
                             .flatMap(new Func1<File, Observable<File>>() {
                                 @Override
                                 public Observable<File> call(File file) {
@@ -77,8 +79,6 @@ public class ReadFileUtil {
                                     return fileObservable;
                                 }
                             })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.newThread())
                             .subscribe(subscriber);
                 }
             }

@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
     protected void onStart() {
         Log.i(TAG, "onStart");
         super.onStart();
-        init();
+
 
     }
 
@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
     protected void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
+        init();
     }
 
     @Override
@@ -168,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     //初始化
     private void init() {
+        Log.i(TAG,"init:"+System.currentTimeMillis());
         //获取视频列表缓存
         videoFiles = CacheUtils.getVideoFileCache(this);
         if (CollectionUtil.isEmpty(videoFiles)) {
@@ -175,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         } else {
             showList();
         }
+        Log.i(TAG,"init:"+System.currentTimeMillis());
         //扫描视频文件
         VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(this);
         videoSubscriber.setScanFileCompleted(this);

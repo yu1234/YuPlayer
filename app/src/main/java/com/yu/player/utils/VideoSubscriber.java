@@ -191,7 +191,7 @@ public class VideoSubscriber<T extends File>  implements MediaScannerConnection.
      *
      * @return
      */
-    public void startScan() {
+    public synchronized void startScan() {
         Log.i(TAG, "VideoSubscriber.startScan");
         Log.i(TAG, "VideoSubscriber.startScan:" + this.flag);
         if (this.flag) {
