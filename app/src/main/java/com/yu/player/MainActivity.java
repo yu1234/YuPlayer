@@ -1,5 +1,6 @@
 package com.yu.player;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
@@ -23,6 +24,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.drawee.generic.GenericDraweeHierarchy;
@@ -33,13 +35,19 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.wang.avi.AVLoadingIndicatorView;
 import com.xiaoleilu.hutool.util.CollectionUtil;
 import com.xiaoleilu.hutool.util.ObjectUtil;
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.PermissionNo;
+import com.yanzhenjie.permission.PermissionYes;
 import com.yu.exoplayer.R2;
 import com.yu.exoplayer.activity.PlayerActivity;
 import com.yu.exoplayer.media.ui.VideoPlayerView;
+import com.yu.player.Impl.ScanFileCompletedImpl;
 import com.yu.player.adapter.VideoRecyclerViewAdapter;
 import com.yu.player.bean.VideoFile;
+import com.yu.player.utils.CacheUtils;
 import com.yu.player.utils.FileUtils;
 import com.yu.player.utils.ReadFileUtil;
+import com.yu.player.utils.VideoSubscriber;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,14 +57,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Subscriber;
 
-public class MainActivity extends AppCompatActivity implements MediaScannerConnectionClient {
+public class MainActivity extends AppCompatActivity implements ScanFileCompletedImpl<VideoFile> {
 
     private final static String TAG = MainActivity.class.getSimpleName();
-    private ReadFileUtil readFileUtil;
-    private List<File> files = new ArrayList<File>();
-    private int index = 0;
     private List<VideoFile> videoFiles = new ArrayList<VideoFile>();
-    private MediaScannerConnection mediaScannerConnection;
+
     /**
      * =================控件注入 start=====================
      */
@@ -89,10 +94,23 @@ public class MainActivity extends AppCompatActivity implements MediaScannerConne
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));//这里用线性显示 类似于listview
 
-        //实例化一个MediaScannerConnection
-        mediaScannerConnection = new MediaScannerConnection(MainActivity.this, this);
-        scanVideoFile();
 
+        //获取权限
+        AndPermission.with(this).requestCode(100).permission(Manifest.permission.READ_EXTERNAL_STORAGE).callback(this).start();
+    }
+
+
+    // 成功回调的方法，用注解即可，这里的100就是请求时的requestCode。
+    @PermissionYes(100)
+    private void getPermissionYes(List<String> grantedPermissions) {
+        // TODO 申请权限成功。
+        init();
+    }
+
+    @PermissionNo(100)
+    private void getPermissionNo(List<String> deniedPermissions) {
+        // TODO 申请权限失败。
+        this.finish();
     }
 
     @Override
@@ -118,105 +136,53 @@ public class MainActivity extends AppCompatActivity implements MediaScannerConne
     }
 
     @Override
-    public void onMediaScannerConnected() {
+    public void addContentView(View view, ViewGroup.LayoutParams params) {
+        super.addContentView(view, params);
+    }
+
+    @Override
+    protected void onStart() {
+        Log.i(TAG, "onStart");
+        super.onStart();
+        init();
 
     }
 
     @Override
-    public void onScanCompleted(String path, Uri uri) {
-        index++;
-        ContentResolver contentResolver = this.getContentResolver();
-        Cursor cursor = contentResolver.query(uri, null, null, null, null);
-        File file = new File(path);
-        if (ObjectUtil.isNotNull(cursor) && cursor.moveToFirst()) {
-            //获取id
-            long mId = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns._ID));
-            //获取名称
-            String name = file.getName();
-            //获取大小
-            long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Video.VideoColumns.SIZE));
-            String formatSize = FileUtils.formatFileSize(size);
-            //获取时长
-            String formatDuration = FileUtils.formatDuration(this, uri);
-            //获取mime_type
-            String mimeType = cursor.getString(cursor.getColumnIndex(MediaStore.Video.VideoColumns.MIME_TYPE));
-            //获取缩略图
-            Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND);
-            VideoFile videoFile = new VideoFile();
-            videoFile.setmId(mId);
-            videoFile.setName(name);
-            videoFile.setFormatSize(formatSize);
-            videoFile.setFormatDuration(formatDuration);
-            videoFile.setMimeType(mimeType);
-            videoFile.setThumbnails(thumbnail);
-            videoFile.setUri(uri);
-            this.videoFiles.add(videoFile);
-
-        }
-        if (index >= files.size()) {
-            Message msg = mHandler.obtainMessage();
-            msg.what = 1;
-            msg.sendToTarget();
-        }
+    protected void onStop() {
+        Log.i(TAG, "onStop");
+        super.onStop();
     }
 
-    //视频文件扫描
-    private void scanVideoFile() {
-        //初始化缓存变量
-        files = new ArrayList<File>();
-        videoFiles = new ArrayList<VideoFile>();
-        index = 0;
-        if (!mediaScannerConnection.isConnected()) {
-            mediaScannerConnection.connect();
-        }
-        loading.show();
-        //开始扫描
-        readFileUtil = ReadFileUtil.getInstance();
-        readFileUtil.getFiles(ReadFileUtil.FileType.VOIDEO, subscriber);
+    @Override
+    protected void onResume() {
+        Log.i(TAG, "onResume");
+        super.onResume();
     }
 
-    //视频文件扫描回调
-    Subscriber<File> subscriber = new Subscriber<File>() {
-        @Override
-        public void onNext(File file) {
-            Log.i(TAG, "Subscriber.onNext");
-            if (ObjectUtil.isNotNull(file)) {
-                if (ObjectUtil.isNotNull(files)) {
-                    files.add(file);
+    @Override
+    protected void onDestroy() {
+        Log.i(TAG, "onDestroy");
+        super.onDestroy();
+    }
 
-                }
-            }
-
+    //初始化
+    private void init() {
+        //获取视频列表缓存
+        videoFiles = CacheUtils.getVideoFileCache(this);
+        if (CollectionUtil.isEmpty(videoFiles)) {
+            loading.show();
+        } else {
+            showList();
         }
-
-        @Override
-        public void onCompleted() {
-            Log.i(TAG, "Subscriber.onCompleted");
-            if (CollectionUtil.isNotEmpty(files)) {
-                for (File file : files) {
-                    if (mediaScannerConnection.isConnected()) {
-                        mediaScannerConnection.scanFile(file.getAbsolutePath(), null);
-                    }
-                }
-            } else {
-                Message msg = mHandler.obtainMessage();
-                msg.what = 1;
-                msg.sendToTarget();
-            }
-
-        }
-
-        @Override
-        public void onError(Throwable e) {
-            Log.e(TAG, "Subscriber.onError", e);
-        }
-    };
+        //扫描视频文件
+        VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(this);
+        videoSubscriber.setScanFileCompleted(this);
+        videoSubscriber.startScan();
+    }
 
     //显示列表
     private void showList() {
-        if (mediaScannerConnection.isConnected()) {
-            mediaScannerConnection.disconnect();
-        }
         loading.hide();
         mRecyclerView.setAdapter(new VideoRecyclerViewAdapter(MainActivity.this, videoFiles));
     }
@@ -230,4 +196,14 @@ public class MainActivity extends AppCompatActivity implements MediaScannerConne
             super.handleMessage(msg);
         }
     };
+
+
+    @Override
+    public void onScanCompleted(List<VideoFile> videoFiles) {
+        this.videoFiles = videoFiles;
+        //重新渲染页面
+        Message msg = mHandler.obtainMessage();
+        msg.what = 1;
+        msg.sendToTarget();
+    }
 }

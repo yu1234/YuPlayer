@@ -25,7 +25,7 @@ public class PlayerUtil {
         String[] filePathColumn = {MediaStore.MediaColumns.TITLE};
         Cursor cursor = context.getContentResolver().query(uri, filePathColumn, null, null, null);
         String title = "";
-        if (ObjectUtil.isNotNull(context) && cursor.moveToFirst()) {
+        if (ObjectUtil.isNotNull(cursor) && cursor.moveToFirst()) {
             cursor.moveToFirst();
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
             title = cursor.getString(columnIndex);

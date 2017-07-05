@@ -3,24 +3,27 @@ package com.yu.player.dao;
 import android.content.Context;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.QueryBuilder;
+import com.xiaoleilu.hutool.util.ObjectUtil;
+import com.xiaoleilu.hutool.util.StrUtil;
+import com.yu.player.bean.BaseBean;
+
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by igreentree on 2017/6/5 0005.
  */
 
-public class CommonDao<T> {
+public class CommonDao<T extends BaseBean> {
     private Context context;
     private Dao dao;
     private MyDbHelper helper;
 
-    public CommonDao(Context context,Class<T> clazz) {
+    public CommonDao(Context context, Class<T> clazz) throws SQLException {
         this.context = context;
-        try {
-            helper = MyDbHelper.getHelper(context);
-            dao = helper.getDao(clazz);
-        } catch (java.sql.SQLException e) {
-            e.printStackTrace();
-        }
+        helper = MyDbHelper.getHelper(context);
+        dao = helper.getDao(clazz);
     }
 
     /**
@@ -28,13 +31,35 @@ public class CommonDao<T> {
      *
      * @param t
      */
-    public void add(T t) {
+    public boolean add(T t) {
+        boolean flag = false;
         try {
-            dao.create(t);
+            if (t.getId() == 0) {
+                t.setId(System.currentTimeMillis());
+            }
+            int rows = dao.create(t);
+            if (rows > 0) {
+                flag = true;
+            }
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
+        return flag;
+    }
 
+    /**
+     * 批量增加信息
+     *
+     * @param ts
+     */
+    public boolean batchAdd(List<T> ts) {
+        boolean flag = false;
+        if (ObjectUtil.isNotNull(ts)) {
+            for (T t : ts) {
+                flag= this.add(t);
+            }
+        }
+        return flag;
     }
 
     /**
@@ -42,13 +67,102 @@ public class CommonDao<T> {
      *
      * @param t
      */
-    public void update(T t) {
+    public boolean update(T t) {
+        boolean flag = false;
         try {
-            dao.update(t);
+            int rows = dao.update(t);
+            if (rows > 0) {
+                flag = true;
+            }
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
-
+        return flag;
     }
 
+    /**
+     * 删除一条信息
+     *
+     * @return
+     */
+    public boolean batchDelete(List<T> ts) {
+        boolean flag = true;
+        try {
+            if (ObjectUtil.isNotNull(ts)) {
+                for (T t : ts) {
+                    dao.delete(t);
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+            flag = false;
+        }
+        return flag;
+    }
+
+    /**
+     * 根据条件查询
+     *
+     * @param queryBuilder
+     * @param <M>
+     * @return
+     * @throws SQLException
+     */
+    public <M> List<M> query(QueryBuilder queryBuilder) {
+
+        if (ObjectUtil.isNotNull(queryBuilder)) {
+            List<M> list = null;
+            try {
+                list = queryBuilder.query();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return list;
+        }
+        return null;
+    }
+
+    /**
+     * 查询全部
+     *
+     * @return
+     * @throws SQLException
+     */
+    public List<T> queryAll() {
+
+        if (ObjectUtil.isNotNull(this.dao)) {
+            List<T> list = null;
+            try {
+                list = this.dao.queryForAll();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return list;
+        }
+        return null;
+    }
+
+    /**
+     * 根据id查询对象
+     *
+     * @return
+     * @throws SQLException
+     */
+    public T queryById(Object id) throws SQLException {
+        if (ObjectUtil.isNotNull(this.dao) && ObjectUtil.isNotNull(id)) {
+
+            T o = (T) dao.queryForId(id);
+            return o;
+        }
+        return null;
+    }
+
+    /**
+     * 获取dao
+     *
+     * @return
+     */
+    public Dao getDao() {
+        return dao;
+    }
 }

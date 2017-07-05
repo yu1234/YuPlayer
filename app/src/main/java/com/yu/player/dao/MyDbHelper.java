@@ -9,7 +9,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.xiaoleilu.hutool.util.CollectionUtil;
 import com.yu.player.bean.Bean;
-import com.yu.player.utils.BeanUtils;
+import com.yu.player.utils.DaoUtils;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -22,8 +22,8 @@ import java.util.List;
  */
 
 public class MyDbHelper extends OrmLiteSqliteOpenHelper {
-    private static final String CDB_DB_NAME = "cdb_db";
-    private static final int DB_VERSION = 1;
+    private static final String CDB_DB_NAME = "yu_player_media_db";
+    private static final int DB_VERSION = 2;
     private static MyDbHelper instance;
     private Context context;
 
@@ -42,7 +42,7 @@ public class MyDbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database, ConnectionSource connectionSource) {
         try {
-            List<Bean> beans = BeanUtils.getDaoBeans(context);
+            List<Bean> beans = DaoUtils.getDaoBeans(context);
             if (CollectionUtil.isNotEmpty(beans)) {
                 for (Bean bean : beans) {
                     Class clazz = Class.forName(bean.getClassName());
@@ -64,7 +64,7 @@ public class MyDbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         try {
-            List<Bean> beans = BeanUtils.getDaoBeans(context);
+            List<Bean> beans = DaoUtils.getDaoBeans(context);
             if (CollectionUtil.isNotEmpty(beans)) {
                 for (Bean bean : beans) {
                     Class clazz = Class.forName(bean.getClassName());
