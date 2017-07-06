@@ -31,7 +31,7 @@
     <color name="c_light_gray6">#EFEFEF</color>
     <color name="c_light_gray7">#DFDFDF</color>
     <color name="c_light_red">#ff4081</color>
-
+    <color name="cl_default">#424242</color>
     <color name="c_red" >#ff0000</color>
     <color name="c_stock_red">#B2364E</color>
     <color name="c_stock_green" >#347724</color>

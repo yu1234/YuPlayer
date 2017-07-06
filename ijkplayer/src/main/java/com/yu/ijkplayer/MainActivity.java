@@ -1,13 +1,23 @@
 package com.yu.ijkplayer;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+import com.yu.ijkplayer.listener.OnPlayerBackListener;
+import com.yu.ijkplayer.listener.OnShowThumbnailListener;
+import com.yu.ijkplayer.view.PlayStateParams;
+import com.yu.ijkplayer.view.PlayerView;
 
 import static android.R.attr.targetSdkVersion;
 
@@ -16,77 +26,84 @@ import static android.R.attr.targetSdkVersion;
  */
 
 public class MainActivity extends AppCompatActivity {
+    private PlayerView player;
+    private Context mContext;
+    private View rootView;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestPermissions();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+        this.mContext = this;
+        rootView = getLayoutInflater().from(this).inflate(R.layout.simple_player_view_player, null);
+        setContentView(rootView);
+        initPlayer();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        if (player != null) {
+            player.onPause();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (player != null) {
+            player.onResume();
+        }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults != null && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-            requestPermissions();
-
+    protected void onDestroy() {
+        super.onDestroy();
+        if (player != null) {
+            player.onDestroy();
         }
     }
 
-    private void requestPermissions() {
-        if (this.selfPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            initPlayer();
-        } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (player != null) {
+            player.onConfigurationChanged(newConfig);
         }
     }
 
-    public boolean selfPermissionGranted(String permission) {
-        // For Android < Android M, self permissions are always granted.
-        boolean result = true;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            if (targetSdkVersion >= Build.VERSION_CODES.M) {
-                // targetSdkVersion >= Android M, we can
-                // use Context#checkSelfPermission
-                result = this.checkSelfPermission(permission)
-                        == PackageManager.PERMISSION_GRANTED;
-            } else {
-                // targetSdkVersion < Android M, we have to use PermissionChecker
-                result = PermissionChecker.checkSelfPermission(this, permission)
-                        == PermissionChecker.PERMISSION_GRANTED;
-            }
+    @Override
+    public void onBackPressed() {
+        if (player != null && player.onBackPressed()) {
+            return;
         }
-
-        return result;
+        super.onBackPressed();
     }
 
     private void initPlayer() {
-
+        String url = "http://183.6.245.249/v.cctv.com/flash/mp4video6/TMS/2011/01/05/cf752b1c12ce452b3040cab2f90bc265_h264818000nero_aac32-1.mp4";
+        player = new PlayerView(this, rootView)
+                .setTitle("什么")
+                .setScaleType(PlayStateParams.fitparent)
+                .forbidTouch(false)
+                .hideMenu(true)
+                .showThumbnail(new OnShowThumbnailListener() {
+                    @Override
+                    public void onShowThumbnail(ImageView ivThumbnail) {
+                        Glide.with(mContext)
+                                .load("http://pic2.nipic.com/20090413/406638_125424003_2.jpg")
+                                .placeholder(R.color.cl_default)
+                                .error(R.color.c_light_gray7)
+                                .into(ivThumbnail);
+                    }
+                })
+                .setPlaySource(url)
+                .setPlayerBackListener(new OnPlayerBackListener() {
+                    @Override
+                    public void onPlayerBack() {
+                        //这里可以简单播放器点击返回键
+                        finish();
+                    }
+                })
+                .startPlay();
     }
 }
