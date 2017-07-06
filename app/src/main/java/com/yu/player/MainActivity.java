@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private List<VideoFile> videoFiles = new ArrayList<VideoFile>();
+    private Thread databaseThread;
 
     /**
      * =================控件注入 start=====================
@@ -169,19 +170,10 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     //初始化
     private void init() {
-        Log.i(TAG,"init:"+System.currentTimeMillis());
         //获取视频列表缓存
-        videoFiles = CacheUtils.getVideoFileCache(this);
-        if (CollectionUtil.isEmpty(videoFiles)) {
-            loading.show();
-        } else {
-            showList();
-        }
-        Log.i(TAG,"init:"+System.currentTimeMillis());
-        //扫描视频文件
-        VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(this);
-        videoSubscriber.setScanFileCompleted(this);
-        videoSubscriber.startScan();
+        this.databaseThread=  new Thread(new DatabaseRunnable());
+        this.databaseThread.start();
+
     }
 
     //显示列表
@@ -190,6 +182,15 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         mRecyclerView.setAdapter(new VideoRecyclerViewAdapter(MainActivity.this, videoFiles));
     }
 
+
+
+    @Override
+    public void onScanCompleted(List<VideoFile> videoFiles) {
+        this.videoFiles = videoFiles;
+        //重新渲染页面
+        mHandler.sendEmptyMessage(1);
+    }
+    //=====================异步操作==============================
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -200,13 +201,23 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         }
     };
 
-
-    @Override
-    public void onScanCompleted(List<VideoFile> videoFiles) {
-        this.videoFiles = videoFiles;
-        //重新渲染页面
-        Message msg = mHandler.obtainMessage();
-        msg.what = 1;
-        msg.sendToTarget();
+    public class DatabaseRunnable implements Runnable{
+        @Override
+        public void run() {
+            Log.i(TAG, "DatabaseRunnable.run");
+            videoFiles = CacheUtils.getVideoFileCache(MainActivity.this);
+            if (CollectionUtil.isEmpty(videoFiles)) {
+                loading.show();
+            } else {
+                mHandler.sendEmptyMessage(1);
+            }
+            //扫描视频文件
+            VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(MainActivity.this);
+            videoSubscriber.setScanFileCompleted(MainActivity.this);
+            videoSubscriber.startScan();
+            if(ObjectUtil.isNotNull(databaseThread)){
+                databaseThread.interrupt();
+            }
+        }
     }
 }
