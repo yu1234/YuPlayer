@@ -33,6 +33,7 @@ import com.facebook.drawee.generic.RoundingParams;
 import com.facebook.drawee.interfaces.DraweeController;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.wang.avi.AVLoadingIndicatorView;
+import com.wuxiaolong.pullloadmorerecyclerview.PullLoadMoreRecyclerView;
 import com.xiaoleilu.hutool.util.CollectionUtil;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yanzhenjie.permission.AndPermission;
@@ -57,7 +58,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Subscriber;
 
-public class MainActivity extends AppCompatActivity implements ScanFileCompletedImpl<VideoFile> {
+public class MainActivity extends AppCompatActivity implements ScanFileCompletedImpl<VideoFile>, PullLoadMoreRecyclerView.PullLoadMoreListener {
 
     private final static String TAG = MainActivity.class.getSimpleName();
     private List<VideoFile> videoFiles = new ArrayList<VideoFile>();
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
     @BindView(R.id.fab)
     FloatingActionButton fab;
     @BindView(R.id.recycler_view)
-    RecyclerView mRecyclerView;
+    PullLoadMoreRecyclerView pullLoadMoreRecyclerView;
     @BindView(R.id.loading)
     AVLoadingIndicatorView loading;
 
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        toolbar.setTitle("视频");
         setSupportActionBar(toolbar);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,8 +95,8 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
             }
         });
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));//这里用线性显示 类似于listview
-
+        pullLoadMoreRecyclerView.setLinearLayout();
+        pullLoadMoreRecyclerView.setOnPullLoadMoreListener(this);
 
         //获取权限
         AndPermission.with(this).requestCode(100).permission(Manifest.permission.READ_EXTERNAL_STORAGE).callback(this).start();
@@ -168,28 +170,53 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         super.onDestroy();
     }
 
+    @Override
+    public void onRefresh() {
+        Log.i(TAG,"下拉刷新");
+        scanFile();
+    }
+
+    @Override
+    public void onLoadMore() {
+
+    }
+
     //初始化
     private void init() {
         //获取视频列表缓存
-        this.databaseThread=  new Thread(new DatabaseRunnable());
+        this.databaseThread = new Thread(new DatabaseRunnable());
         this.databaseThread.start();
 
     }
 
     //显示列表
     private void showList() {
+        Log.i(TAG,"showList");
+        pullLoadMoreRecyclerView.setPullLoadMoreCompleted();
         loading.hide();
-        mRecyclerView.setAdapter(new VideoRecyclerViewAdapter(MainActivity.this, videoFiles));
+        pullLoadMoreRecyclerView.setAdapter(new VideoRecyclerViewAdapter(MainActivity.this, videoFiles));
     }
 
 
-
+    /**
+     * 扫描完成回调
+     * @param videoFiles
+     */
     @Override
     public void onScanCompleted(List<VideoFile> videoFiles) {
+        Log.i(TAG,"扫描完成回调");
         this.videoFiles = videoFiles;
         //重新渲染页面
         mHandler.sendEmptyMessage(1);
     }
+
+    public void scanFile() {
+        //扫描视频文件
+        VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(MainActivity.this);
+        videoSubscriber.setScanFileCompleted(MainActivity.this);
+        videoSubscriber.startScan();
+    }
+
     //=====================异步操作==============================
     Handler mHandler = new Handler() {
         @Override
@@ -201,7 +228,8 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
         }
     };
 
-    public class DatabaseRunnable implements Runnable{
+
+    public class DatabaseRunnable implements Runnable {
         @Override
         public void run() {
             Log.i(TAG, "DatabaseRunnable.run");
@@ -211,11 +239,8 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
             } else {
                 mHandler.sendEmptyMessage(1);
             }
-            //扫描视频文件
-            VideoSubscriber<File> videoSubscriber = VideoSubscriber.getInstance(MainActivity.this);
-            videoSubscriber.setScanFileCompleted(MainActivity.this);
-            videoSubscriber.startScan();
-            if(ObjectUtil.isNotNull(databaseThread)){
+            scanFile();
+            if (ObjectUtil.isNotNull(databaseThread)) {
                 databaseThread.interrupt();
             }
         }
