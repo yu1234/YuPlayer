@@ -53,14 +53,14 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="8dp"
-            android:src="@drawable/simple_player_circle_outline_white_36dp"/>
+            android:src="@drawable/ic_play_circle_outline_white_48dp"/>
     </LinearLayout>
     <!-- 网络提示-->
     <LinearLayout
         android:id="@+id/app_video_netTie"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#33000000"
+        android:background="#CC000000"
         android:gravity="center"
         android:orientation="vertical"
         android:visibility="gone">
@@ -246,6 +246,6 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_marginTop="8dp"
-        android:src="@drawable/simple_player_center_play"/>
+        android:src="@drawable/ic_play_circle_outline_white_48dp"/>
 
 </RelativeLayout>

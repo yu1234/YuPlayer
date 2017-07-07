@@ -102,9 +102,12 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
             if (ObjectUtil.isNotNull(videoFileDao)) {
                 try {
                     VideoFile videoFile1 = videoFileDao.queryById(videoFile.getId());
-                    videoFile1.setWatch(true);
-                    videoFile1.setNew(false);
-                    videoFileDao.update(videoFile1);
+                    if(ObjectUtil.isNotNull(videoFile1)){
+                        videoFile1.setWatch(true);
+                        videoFile1.setNew(false);
+                        videoFileDao.update(videoFile1);
+                    }
+
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }

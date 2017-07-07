@@ -22,8 +22,13 @@ import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.listener.OnPlayerBackListener;
 import com.yu.ijkplayer.listener.OnShowThumbnailListener;
 import com.yu.ijkplayer.utils.PlayerUtil;
+import com.yu.ijkplayer.view.IjkPlayerView;
+import com.yu.ijkplayer.view.IjkVideoView;
 import com.yu.ijkplayer.view.PlayStateParams;
 import com.yu.ijkplayer.view.PlayerView;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 import static android.R.attr.targetSdkVersion;
 
@@ -32,16 +37,14 @@ import static android.R.attr.targetSdkVersion;
  */
 
 public class MainActivity extends AppCompatActivity {
-    private PlayerView player;
-    private Context mContext;
-    private View rootView;
+    @BindView(R2.id.ijk_player_view)
+     IjkPlayerView player;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.mContext = this;
-        rootView = getLayoutInflater().from(this).inflate(R.layout.simple_player_view_player, null);
-        setContentView(rootView);
+        setContentView(R.layout.ijk_player);
+        ButterKnife.bind(this);
         initPlayer();
     }
 
@@ -49,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (player != null) {
-            player.onPause();
+            player.onPlayerPause();
         }
     }
 
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (player != null) {
-            player.onResume();
+            player.onPlayerResume();
         }
     }
 
@@ -65,23 +68,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (player != null) {
-            player.onDestroy();
+            player.onPlayerRelease();
         }
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        if (player != null) {
-            player.onConfigurationChanged(newConfig);
-        }
+
     }
 
     @Override
     public void onBackPressed() {
-        if (player != null && player.onBackPressed()) {
-            return;
-        }
         super.onBackPressed();
     }
 
@@ -90,26 +88,11 @@ public class MainActivity extends AppCompatActivity {
         Uri uri = intent.getData();
         if (ObjectUtil.isNotNull(uri)) {
             final VideoijkBean bean = PlayerUtil.getVideoInfo(this, uri);
-            if(StrUtil.isNotBlank(bean.getUrl())){
-                player = new PlayerView(this, rootView)
-                        .setTitle(bean.getTitle())
+            if (StrUtil.isNotBlank(bean.getUrl()) && ObjectUtil.isNotNull(player)) {
+                player.setTitle(bean.getTitle())
                         .setScaleType(PlayStateParams.fitparent)
                         .forbidTouch(false)
-                        .hideMenu(true)
-                        .showThumbnail(new OnShowThumbnailListener() {
-                            @Override
-                            public void onShowThumbnail(ImageView ivThumbnail) {
-                                ivThumbnail.setImageBitmap(bean.getThumbnails());
-                            }
-                        })
                         .setPlaySource(bean.getUrl())
-                        .setPlayerBackListener(new OnPlayerBackListener() {
-                            @Override
-                            public void onPlayerBack() {
-                                //这里可以简单播放器点击返回键
-                                finish();
-                            }
-                        })
                         .startPlay();
             }
 

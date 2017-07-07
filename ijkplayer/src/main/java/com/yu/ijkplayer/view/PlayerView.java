@@ -105,7 +105,7 @@ public class PlayerView {
         /**
          * 视频方向旋转按钮
          */
-        private final ImageView iv_rotation;
+      //  private final ImageView iv_rotation;
         /**
          * 视频返回按钮
          */
@@ -125,7 +125,7 @@ public class PlayerView {
         /**
          * 视频全屏按钮
          */
-        private final ImageView iv_fullscreen;
+      //  private final ImageView iv_fullscreen;
         /**
          * 菜单面板
          */
@@ -149,7 +149,7 @@ public class PlayerView {
         /**
          * 视频分辨率按钮
          */
-        private final TextView tv_steam;
+       // private final TextView tv_steam;
         /**
          * 视频加载速度
          */
@@ -402,16 +402,16 @@ public class PlayerView {
                 if (v.getId() == R.id.app_video_menu) {
                     /**菜单*/
                     showMenu();
-                } else if (v.getId() == R.id.app_video_stream) {
-                    /**选择分辨率*/
+                }/* else if (v.getId() == R.id.app_video_stream) {
+                    *//**选择分辨率*//*
                     showStreamSelectView();
                 } else if (v.getId() == R.id.ijk_iv_rotation) {
-                    /**旋转视频方向*/
+                    *//**旋转视频方向*//*
                     setPlayerRotation();
                 } else if (v.getId() == R.id.app_video_fullscreen) {
-                    /**视频全屏切换*/
+                    *//**视频全屏切换*//*
                     toggleFullScreen();
-                } else if (v.getId() == R.id.app_video_play || v.getId() == R.id.play_icon) {
+                }*/ else if (v.getId() == R.id.app_video_play || v.getId() == R.id.play_icon) {
                     /**视频播放和暂停*/
                     if (videoView.isPlaying()) {
                         if (isLive) {
@@ -648,9 +648,9 @@ public class PlayerView {
                 iv_menu = (ImageView) mActivity.findViewById(R.id.app_video_menu);
                 iv_bar_player = (ImageView) mActivity.findViewById(R.id.app_video_play);
                 iv_player = (ImageView) mActivity.findViewById(R.id.play_icon);
-                iv_rotation = (ImageView) mActivity.findViewById(R.id.ijk_iv_rotation);
-                iv_fullscreen = (ImageView) mActivity.findViewById(R.id.app_video_fullscreen);
-                tv_steam = (TextView) mActivity.findViewById(R.id.app_video_stream);
+               // iv_rotation = (ImageView) mActivity.findViewById(R.id.ijk_iv_rotation);
+               // iv_fullscreen = (ImageView) mActivity.findViewById(R.id.app_video_fullscreen);
+               // tv_steam = (TextView) mActivity.findViewById(R.id.app_video_stream);
                 tv_speed = (TextView) mActivity.findViewById(R.id.app_video_speed);
                 seekBar = (SeekBar) mActivity.findViewById(R.id.app_video_seekBar);
             } else {
@@ -663,9 +663,9 @@ public class PlayerView {
                 iv_menu = (ImageView) rootView.findViewById(R.id.app_video_menu);
                 iv_bar_player = (ImageView) rootView.findViewById(R.id.app_video_play);
                 iv_player = (ImageView) rootView.findViewById(R.id.play_icon);
-                iv_rotation = (ImageView) rootView.findViewById(R.id.ijk_iv_rotation);
-                iv_fullscreen = (ImageView) rootView.findViewById(R.id.app_video_fullscreen);
-                tv_steam = (TextView) rootView.findViewById(R.id.app_video_stream);
+               // iv_rotation = (ImageView) rootView.findViewById(R.id.ijk_iv_rotation);
+             //   iv_fullscreen = (ImageView) rootView.findViewById(R.id.app_video_fullscreen);
+                //tv_steam = (TextView) rootView.findViewById(R.id.app_video_stream);
                 tv_speed = (TextView) rootView.findViewById(R.id.app_video_speed);
                 seekBar = (SeekBar) rootView.findViewById(R.id.app_video_seekBar);
             }
@@ -674,9 +674,9 @@ public class PlayerView {
             seekBar.setOnSeekBarChangeListener(mSeekListener);
             iv_bar_player.setOnClickListener(onClickListener);
             iv_player.setOnClickListener(onClickListener);
-            iv_fullscreen.setOnClickListener(onClickListener);
+          /*  iv_fullscreen.setOnClickListener(onClickListener);
             iv_rotation.setOnClickListener(onClickListener);
-            tv_steam.setOnClickListener(onClickListener);
+            tv_steam.setOnClickListener(onClickListener);*/
             iv_back.setOnClickListener(onClickListener);
             iv_menu.setOnClickListener(onClickListener);
             query.id(R.id.app_video_netTie_icon).clicked(onClickListener);
@@ -1058,7 +1058,7 @@ public class PlayerView {
          */
         public PlayerView switchStream(int index) {
             if (listVideos.size() > index) {
-                tv_steam.setText(listVideos.get(index).getStream());
+                //tv_steam.setText(listVideos.get(index).getStream());
                 currentUrl = listVideos.get(index).getUrl();
                 listVideos.get(index).setSelect(true);
                 isLive();
@@ -1223,12 +1223,12 @@ public class PlayerView {
             return ll_bottombar;
         }
 
-        /**
+     /*   *//**
          * 获取旋转view
-         */
+         *//*
         public ImageView getRationView() {
             return iv_rotation;
-        }
+        }*/
 
         /**
          * 获取返回view
@@ -1244,12 +1244,12 @@ public class PlayerView {
             return iv_menu;
         }
 
-        /**
+       /* *//**
          * 获取全屏按钮view
-         */
+         *//*
         public ImageView getFullScreenView() {
             return iv_fullscreen;
-        }
+        }*/
 
         /**
          * 获取底部bar的播放view
@@ -1281,29 +1281,29 @@ public class PlayerView {
             return this;
         }
 
-        /**
+       /* *//**
          * 隐藏分辨率按钮，true隐藏，false为显示
-         */
+         *//*
         public PlayerView hideSteam(boolean isHide) {
             tv_steam.setVisibility(isHide ? View.GONE : View.VISIBLE);
             return this;
-        }
+        }*/
 
-        /**
+      /*  *//**
          * 隐藏旋转按钮，true隐藏，false为显示
-         */
+         *//*
         public PlayerView hideRotation(boolean isHide) {
             iv_rotation.setVisibility(isHide ? View.GONE : View.VISIBLE);
             return this;
-        }
+        }*/
 
-        /**
+     /*   *//**
          * 隐藏全屏按钮，true隐藏，false为显示
-         */
+         *//*
         public PlayerView hideFullscreen(boolean isHide) {
             iv_fullscreen.setVisibility(isHide ? View.GONE : View.VISIBLE);
             return this;
-        }
+        }*/
 
         /**
          * 隐藏中间播放按钮,ture为隐藏，false为不做隐藏处理，但不是显示
@@ -1366,11 +1366,11 @@ public class PlayerView {
                 } else {
                     query.id(R.id.app_video_process_panl).visible();
                 }
-                if (isOnlyFullScreen || isForbidDoulbeUp) {
+               /* if (isOnlyFullScreen || isForbidDoulbeUp) {
                     iv_fullscreen.setVisibility(View.GONE);
                 } else {
                     iv_fullscreen.setVisibility(View.VISIBLE);
-                }
+                }*/
                 if (onControlPanelVisibilityChangeListener != null) {
                     onControlPanelVisibilityChangeListener.change(true);
                 }
@@ -1861,12 +1861,12 @@ public class PlayerView {
                 if (isLive) {
                     iv_bar_player.setImageResource(R.drawable.simple_player_stop_white_24dp);
                 } else {
-                    iv_bar_player.setImageResource(R.drawable.simple_player_icon_media_pause);
-                    iv_player.setImageResource(R.drawable.simple_player_center_pause);
+                    iv_bar_player.setImageResource(R.drawable.ic_pause_white_24dp);
+                    iv_player.setImageResource(R.drawable.ic_pause_circle_outline_white_48dp);
                 }
             } else {
-                iv_bar_player.setImageResource(R.drawable.simple_player_arrow_white_24dp);
-                iv_player.setImageResource(R.drawable.simple_player_center_play);
+                iv_bar_player.setImageResource(R.drawable.ic_play_arrow_white_24dp);
+                iv_player.setImageResource(R.drawable.ic_play_circle_outline_white_48dp);
             }
         }
 
@@ -1874,11 +1874,11 @@ public class PlayerView {
          * 更新全屏和半屏按钮
          */
         private void updateFullScreenButton() {
-            if (getScreenOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
+         /*   if (getScreenOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                 iv_fullscreen.setImageResource(R.drawable.simple_player_icon_fullscreen_shrink);
             } else {
                 iv_fullscreen.setImageResource(R.drawable.simple_player_icon_fullscreen_stretch);
-            }
+            }*/
         }
 
         /**

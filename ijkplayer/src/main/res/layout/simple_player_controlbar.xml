@@ -8,12 +8,6 @@
               android:minHeight="48dp"
               android:padding="4dp">
 
-    <ImageView
-        android:id="@+id/app_video_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:src="@drawable/simple_player_arrow_white_24dp"/>
 
     <LinearLayout
         android:id="@+id/app_video_process_panl"
@@ -74,9 +68,9 @@
 
             <SeekBar
                 android:id="@+id/app_video_seekBar"
-                style="@style/SeekBarAppTheme"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                style="@android:style/Widget.DeviceDefault.SeekBar"/>
 
             <LinearLayout
                 android:id="@+id/app_video_center"
@@ -85,26 +79,35 @@
                 android:layout_marginLeft="2dp"
                 android:layout_marginRight="2dp"
                 android:orientation="horizontal">
-
+                <ImageView
+                    android:id="@+id/app_video_play"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:gravity="center"
+                    android:src="@drawable/ic_play_arrow_white_24dp"/>
                 <TextView
                     android:id="@+id/app_video_currentTime"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:text="06:21"
                     android:textColor="@android:color/white"
+                    android:gravity="center"
                     android:textSize="12dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:text="/"
                     android:textColor="@android:color/white"
+                    android:gravity="center"
                     android:textSize="12dp"/>
 
                 <TextView
                     android:id="@+id/app_video_endTime"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
                     android:text="10:10"
                     android:textColor="@android:color/white"
                     android:textSize="12dp"/>
@@ -123,7 +126,7 @@
             android:visibility="gone"/>
     </LinearLayout>
 
-    <TextView
+    <!--<TextView
         android:id="@+id/app_video_stream"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -133,19 +136,9 @@
         android:text="标清"
         android:textColor="@android:color/white"
         android:textSize="12dp"/>
+-->
 
-    <ImageView
-        android:id="@+id/ijk_iv_rotation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:src="@drawable/simple_player_iv_rotation"/>
 
-    <ImageView
-        android:id="@+id/app_video_fullscreen"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:src="@drawable/simple_player_icon_fullscreen_stretch"/>
+
 
 </LinearLayout>

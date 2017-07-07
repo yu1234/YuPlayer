@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.yu.ijkplayer.view.IjkVideoView
+        android:id="@+id/ijk_video_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.yu.ijkplayer.view.IjkPlayerControllerTop
+        android:id="@+id/ijk_player_controller_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:visibility="visible" />
+
+    <com.yu.ijkplayer.view.IjkPlayerControllerCenter
+        android:id="@+id/ijk_player_controller_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="visible" />
+
+    <com.yu.ijkplayer.view.IjkPlayerControllerBottom
+        android:id="@+id/ijk_player_controller_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="visible" />
+</FrameLayout>
