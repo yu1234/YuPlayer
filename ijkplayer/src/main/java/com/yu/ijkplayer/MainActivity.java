@@ -2,8 +2,10 @@ package com.yu.ijkplayer;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,8 +16,12 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.xiaoleilu.hutool.util.ObjectUtil;
+import com.xiaoleilu.hutool.util.StrUtil;
+import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.listener.OnPlayerBackListener;
 import com.yu.ijkplayer.listener.OnShowThumbnailListener;
+import com.yu.ijkplayer.utils.PlayerUtil;
 import com.yu.ijkplayer.view.PlayStateParams;
 import com.yu.ijkplayer.view.PlayerView;
 
@@ -80,30 +86,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initPlayer() {
-        String url = "http://183.6.245.249/v.cctv.com/flash/mp4video6/TMS/2011/01/05/cf752b1c12ce452b3040cab2f90bc265_h264818000nero_aac32-1.mp4";
-        player = new PlayerView(this, rootView)
-                .setTitle("什么")
-                .setScaleType(PlayStateParams.fitparent)
-                .forbidTouch(false)
-                .hideMenu(true)
-                .showThumbnail(new OnShowThumbnailListener() {
-                    @Override
-                    public void onShowThumbnail(ImageView ivThumbnail) {
-                        Glide.with(mContext)
-                                .load("http://pic2.nipic.com/20090413/406638_125424003_2.jpg")
-                                .placeholder(R.color.cl_default)
-                                .error(R.color.c_light_gray7)
-                                .into(ivThumbnail);
-                    }
-                })
-                .setPlaySource(url)
-                .setPlayerBackListener(new OnPlayerBackListener() {
-                    @Override
-                    public void onPlayerBack() {
-                        //这里可以简单播放器点击返回键
-                        finish();
-                    }
-                })
-                .startPlay();
+        Intent intent = getIntent();
+        Uri uri = intent.getData();
+        if (ObjectUtil.isNotNull(uri)) {
+            final VideoijkBean bean = PlayerUtil.getVideoInfo(this, uri);
+            if(StrUtil.isNotBlank(bean.getUrl())){
+                player = new PlayerView(this, rootView)
+                        .setTitle(bean.getTitle())
+                        .setScaleType(PlayStateParams.fitparent)
+                        .forbidTouch(false)
+                        .hideMenu(true)
+                        .showThumbnail(new OnShowThumbnailListener() {
+                            @Override
+                            public void onShowThumbnail(ImageView ivThumbnail) {
+                                ivThumbnail.setImageBitmap(bean.getThumbnails());
+                            }
+                        })
+                        .setPlaySource(bean.getUrl())
+                        .setPlayerBackListener(new OnPlayerBackListener() {
+                            @Override
+                            public void onPlayerBack() {
+                                //这里可以简单播放器点击返回键
+                                finish();
+                            }
+                        })
+                        .startPlay();
+            }
+
+        }
+
     }
 }

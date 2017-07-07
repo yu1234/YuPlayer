@@ -26,6 +26,8 @@ import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.gyf.barlibrary.BarHide;
+import com.gyf.barlibrary.ImmersionBar;
 import com.yu.ijkplayer.*;
 import com.yu.ijkplayer.adapter.StreamSelectAdapter;
 import com.yu.ijkplayer.bean.VideoijkBean;
@@ -583,6 +585,7 @@ public class PlayerView {
         public PlayerView(Activity activity, View rootView) {
             this.mActivity = activity;
             this.mContext = activity;
+            ImmersionBar.with(this.mActivity).hideBar(BarHide.FLAG_HIDE_BAR).init();
             try {
                 IjkMediaPlayer.loadLibrariesOnce(null);
                 IjkMediaPlayer.native_profileBegin("libijkplayer.so");
@@ -1355,6 +1358,7 @@ public class PlayerView {
             query.id(R.id.simple_player_settings_container).gone();
             query.id(R.id.simple_player_select_stream_container).gone();
             if (isShowControlPanl) {
+                ImmersionBar.with(this.mActivity).hideBar(BarHide.FLAG_SHOW_BAR).init();
                 ll_topbar.setVisibility(isHideTopBar ? View.GONE : View.VISIBLE);
                 ll_bottombar.setVisibility(isHideBottonBar ? View.GONE : View.VISIBLE);
                 if (isLive) {
@@ -1387,6 +1391,7 @@ public class PlayerView {
                 mHandler.sendEmptyMessage(MESSAGE_SHOW_PROGRESS);
                 mAutoPlayRunnable.start();
             } else {
+                ImmersionBar.with(this.mActivity).hideBar(BarHide.FLAG_HIDE_BAR).init();
                 if (isHideTopBar) {
                     ll_topbar.setVisibility(View.GONE);
                 } else {

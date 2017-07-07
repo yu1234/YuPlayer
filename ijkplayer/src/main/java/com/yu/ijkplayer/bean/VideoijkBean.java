@@ -1,5 +1,7 @@
 package com.yu.ijkplayer.bean;
 
+import android.graphics.Bitmap;
+
 /**
  * ========================================
  * <p>
@@ -24,23 +26,34 @@ public class VideoijkBean {
     /**
      * id
      */
-    int id;
+    private int id;
     /**
      * 分辨率名称
      */
-    String stream;
+    private String stream;
     /**
      * 分辨率对应视频地址
      */
-    String url;
+    private String url;
     /**
      * 备注备用
      */
-    String remarks;
+    private String remarks;
     /**
      * 当前选中的
      */
-    boolean select;
+    private boolean select;
+
+    /**
+     * 缩略图
+     *
+     * @return
+     */
+    private Bitmap thumbnails;
+    /**
+     * 标题
+     */
+    private String title;
 
     public int getId() {
         return id;
@@ -82,6 +95,21 @@ public class VideoijkBean {
         this.select = select;
     }
 
+    public Bitmap getThumbnails() {
+        return thumbnails;
+    }
+
+    public void setThumbnails(Bitmap thumbnails) {
+        this.thumbnails = thumbnails;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -105,4 +133,6 @@ public class VideoijkBean {
         result = 31 * result + (remarks != null ? remarks.hashCode() : 0);
         return result;
     }
+
+
 }

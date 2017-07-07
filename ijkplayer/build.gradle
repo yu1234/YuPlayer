@@ -36,4 +36,6 @@ dependencies {
     compile 'tv.danmaku.ijk.media:ijkplayer-x86:0.8.0'
     compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.0'
     compile 'tv.danmaku.ijk.media:ijkplayer-exo:0.8.0'
+    compile 'com.gyf.barlibrary:barlibrary:2.2.4'
+    compile 'com.xiaoleilu:hutool-all:3.0.7'
 }

@@ -110,7 +110,7 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
                 }
             }
             Uri uri = videoFile.getUri();
-            PlayerUtil.playVideo(context, uri);
+           com.yu.ijkplayer.utils.PlayerUtil.playVideo(context, uri);
         }
 
     }
