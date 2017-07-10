@@ -16,8 +16,11 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.gyf.barlibrary.BarHide;
+import com.gyf.barlibrary.ImmersionBar;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
+import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.listener.OnPlayerBackListener;
 import com.yu.ijkplayer.listener.OnShowThumbnailListener;
@@ -26,6 +29,8 @@ import com.yu.ijkplayer.view.IjkPlayerView;
 import com.yu.ijkplayer.view.IjkVideoView;
 import com.yu.ijkplayer.view.PlayStateParams;
 import com.yu.ijkplayer.view.PlayerView;
+
+import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,7 +43,7 @@ import static android.R.attr.targetSdkVersion;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R2.id.ijk_player_view)
-     IjkPlayerView player;
+    IjkPlayerView player;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         if (player != null) {
             player.onPlayerRelease();
         }
+        EventBus.getDefault().post(EventBusCode.ACTIVITY_FINISH);
     }
 
     @Override
