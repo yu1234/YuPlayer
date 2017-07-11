@@ -12,7 +12,9 @@ public enum EventBusCode {
     , BATTERY_CHANGE//电量改变
     , NETWORK_CHANGE//网络状态变化
     , POWER_DISCONNECTED//断电
-    , POWER_CONNECTED;//充电
+    , POWER_CONNECTED//充电
+    , PROGRESS_CHANGE;//进度条变化
+
 
     int CurrentBattery = 0;
     boolean isCharging;

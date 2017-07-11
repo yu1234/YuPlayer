@@ -1,21 +1,12 @@
 package com.yu.ijkplayer.utils;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.Build;
-import android.util.DisplayMetrics;
 import android.view.Display;
-import android.view.KeyCharacterMap;
-import android.view.KeyEvent;
-import android.view.ViewConfiguration;
-import android.view.Window;
 import android.view.WindowManager;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * Created by igreentree on 2017/7/10 0010.

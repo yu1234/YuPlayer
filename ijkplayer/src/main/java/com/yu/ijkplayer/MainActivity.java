@@ -21,6 +21,7 @@ import com.gyf.barlibrary.ImmersionBar;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkplayer.bean.EventBusCode;
+import com.yu.ijkplayer.bean.PlayerListenerCode;
 import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.listener.OnPlayerBackListener;
 import com.yu.ijkplayer.listener.OnShowThumbnailListener;
@@ -56,25 +57,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (player != null) {
-            player.onPlayerPause();
-        }
+        EventBus.getDefault().post(PlayerListenerCode.PAUSE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (player != null) {
-            player.onPlayerResume();
-        }
+        EventBus.getDefault().post(PlayerListenerCode.RESUME);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (player != null) {
-            player.onPlayerRelease();
-        }
+        EventBus.getDefault().post(PlayerListenerCode.RELEASE);
         EventBus.getDefault().post(EventBusCode.ACTIVITY_FINISH);
     }
 

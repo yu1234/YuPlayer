@@ -10,7 +10,9 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -20,13 +22,19 @@ import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
+import com.yu.ijkplayer.bean.GestureListenerCode;
+import com.yu.ijkplayer.bean.PlayerListenerCode;
 import com.yu.ijkplayer.bean.VideoijkBean;
+import com.yu.ijkplayer.impl.PlayerCompletion;
 import com.yu.ijkplayer.utils.NetworkUtils;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 /**
@@ -36,7 +44,7 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
  * <p>
  */
 
-public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
+public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnCompletionListener, View.OnTouchListener {
     /**
      * 控件注入
      */
@@ -81,18 +89,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 禁止触摸，默认可以触摸，true为禁止false为可触摸
      */
     private boolean isForbidTouch;
-    /**
-     * 当前播放位置
-     */
-    private int currentPosition;
-    /**
-     * 记录进行后台时的播放状态0为播放，1为暂停
-     */
-    private int bgState;
-    /**
-     * 当前状态
-     */
-    private int status = PlayStateParams.STATE_IDLE;
+
+
     /**
      * 控制页面显示 默认不显示 true为显示，false不显示
      */
@@ -105,6 +103,15 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 页面显示时间
      */
     private final static long SHOW_VIEW_TIMEOUT = 5000;
+    /**
+     * 手势
+     */
+    private GestureDetector gestureDetector;
+
+    /**
+     * 当前手势类型
+     */
+    private GestureListenerCode gestureListenerCode;
 
     public IjkPlayerView(@NonNull Context context) {
         this(context, null);
@@ -114,7 +121,7 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         this(context, attrs, 0);
     }
 
-    public IjkPlayerView(@NonNull  Context context, @Nullable final AttributeSet attrs, @AttrRes final int defStyleAttr) {
+    public IjkPlayerView(@NonNull Context context, @Nullable final AttributeSet attrs, @AttrRes final int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         //填充页面
         View view = LayoutInflater.from(context).inflate(R.layout.ijk_player_view, this);
@@ -125,13 +132,14 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         initPlayer();
         //事件注册
         registerListener();
+        //EventBus注册
+        EventBus.getDefault().register(this);
         view.post(new Runnable() {
             @Override
             public void run() {
                 showControllerView();
             }
         });
-
 
 
     }
@@ -165,7 +173,8 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      */
     private void registerListener() {
         //返回按键点击事件注册
-        this.setOnClickListener(this);
+        this.setOnTouchListener(this);
+        gestureDetector = new GestureDetector(this.context, new PlayerGestureListener());
 
     }
 
@@ -220,8 +229,11 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
      * 开始播放
      */
     public IjkPlayerView startPlay() {
-        if (playerSupport) {
+        if (playerSupport && ObjectUtil.isNotNull(ijkVideoView)) {
+            ijkVideoView.setOnCompletionListener(this);
             ijkVideoView.start();
+            controllerBottom.setPlayer(ijkVideoView);
+            EventBus.getDefault().post(PlayerListenerCode.START);
         } else {
             //TODO 播放错误
             //showStatus(mActivity.getResources().getString(R.string.not_support));
@@ -229,78 +241,6 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         return this;
     }
 
-    /**
-     * 播放暂停
-     * if (player != null) {
-     * player.onPause();
-     */
-    public void onPlayerPause() {
-        if (ObjectUtil.isNotNull(ijkVideoView)) {
-            bgState = (ijkVideoView.isPlaying() ? 0 : 1);
-            status = PlayStateParams.STATE_PAUSED;
-            if (ijkVideoView.isPlaying()) {
-                getCurrentPosition();
-                ijkVideoView.onPause();
-            }
-
-        }
-    }
-
-    /**
-     * 播放恢复
-     * if (player != null) {
-     * player.onResume();
-     * }
-     * }
-     */
-    public void onPlayerResume() {
-        if (ObjectUtil.isNotNull(ijkVideoView)) {
-            ijkVideoView.onResume();
-            ijkVideoView.seekTo(currentPosition);
-            if (bgState == 1) {
-                onPlayerPause();
-            }
-        }
-    }
-
-    /**
-     * 播放器释放
-     *
-     * @return
-     */
-    public void onPlayerRelease() {
-        if (ObjectUtil.isNotNull(ijkVideoView)) {
-            ijkVideoView.stopPlayback();
-        }
-    }
-
-    /**
-     * 获取当前播放位置
-     */
-    public int getCurrentPosition() {
-        if (ObjectUtil.isNotNull(ijkVideoView)) {
-            this.currentPosition = ijkVideoView.getCurrentPosition();
-        } else {
-            this.currentPosition = 0;
-        }
-        return currentPosition;
-    }
-
-    /**
-     * 点击事件
-     *
-     * @param v
-     */
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == this.getId()) {
-            if (this.isControllerViewShow) {
-                hideControllerView();
-            } else {
-                showControllerView();
-            }
-        }
-    }
 
     /**
      * 显示控制页面
@@ -330,16 +270,134 @@ public class IjkPlayerView extends FrameLayout implements View.OnClickListener {
         this.countDownTimer = new CountDownTimer(SHOW_VIEW_TIMEOUT, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                Log.i(TAG, "onTick");
+
             }
 
             @Override
             public void onFinish() {
-                Log.i(TAG, "onFinish");
                 hideControllerView();
             }
         };
         this.countDownTimer.start();
     }
 
+    @Override
+    public void onCompletion(IMediaPlayer iMediaPlayer) {
+        PlayerCompletion playerCompletion = new PlayerCompletion();
+        playerCompletion.setMediaPlayer(iMediaPlayer);
+        EventBus.getDefault().post(playerCompletion);
+    }
+
+
+    /**
+     * 播放过程监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlayerListenerCode code) {
+        if (PlayerListenerCode.RESTART == code) {//重新播放
+            this.startPlay();
+        }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (ObjectUtil.isNotNull(this.gestureDetector)) {
+            this.gestureDetector.onTouchEvent(event);
+        }
+        // 处理手势结束
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_UP:
+                //TODO 手势结束
+                if (ObjectUtil.isNotNull(gestureListenerCode)) {
+                    GestureListenerCode code = GestureListenerCode.END_GESTURE;
+                    code.setEndCode(gestureListenerCode);
+                    EventBus.getDefault().post(code);
+                    gestureListenerCode = null;
+                }
+                break;
+        }
+        return true;
+    }
+
+    /**
+     * 播放器的手势监听
+     */
+    public class PlayerGestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        /**
+         * 是否是按下的标识，默认为其他动作，true为按下标识，false为其他动作
+         */
+        private boolean isDownTouch;
+        /**
+         * 是否声音控制,默认为亮度控制，true为声音控制，false为亮度控制
+         */
+        private boolean isVolume;
+        /**
+         * 是否横向滑动，默认为纵向滑动，true为横向滑动，false为纵向滑动
+         */
+        private boolean isLandscape;
+
+        /**
+         * 双击
+         */
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            /**双击暂停\开始事件*/
+            if (ObjectUtil.isNotNull(ijkVideoView)) {
+                if (ijkVideoView.isPlaying()) {
+                    EventBus.getDefault().post(PlayerListenerCode.PAUSE);
+                } else {
+                    EventBus.getDefault().post(PlayerListenerCode.RESUME);
+                }
+            }
+            return true;
+        }
+
+        /**
+         * 按下
+         */
+        @Override
+        public boolean onDown(MotionEvent e) {
+            isDownTouch = true;
+            return super.onDown(e);
+        }
+
+
+        /**
+         * 滑动
+         */
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if (!isForbidTouch) {
+                float mOldX = e1.getX(), mOldY = e1.getY();
+                float deltaY = mOldY - e2.getY();
+                float deltaX = mOldX - e2.getX();
+                if (isDownTouch) {
+                    isLandscape = Math.abs(distanceX) >= Math.abs(distanceY);
+                }
+
+                if (isLandscape) {
+                    /**进度设置*/
+                    gestureListenerCode = GestureListenerCode.PROGRESS_SLIDE;
+                    gestureListenerCode.setPercent(-deltaX / ijkVideoView.getWidth());
+                    EventBus.getDefault().post(gestureListenerCode);
+                }
+            }
+            return super.onScroll(e1, e2, distanceX, distanceY);
+        }
+
+        /**
+         * 单击
+         */
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            /**视频视窗单击事件*/
+            if (isControllerViewShow) {
+                hideControllerView();
+            } else {
+                showControllerView();
+            }
+            return true;
+        }
+    }
 }

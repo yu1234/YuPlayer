@@ -52,14 +52,6 @@ import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 /**
  * ========================================
  * <p>
- * 版 权：dou361.com 版权所有 （C） 2015
- * <p>
- * 作 者：陈冠明
- * <p>
- * 个人网站：http://www.dou361.com
- * <p>
- * 版 本：1.0
- * <p>
  * 创建日期：2016/8/10 15:29
  * <p>
  * 描 述：视频渲染界面管理
@@ -255,7 +247,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             renderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
 
         View renderUIView = mRenderView.getView();
-        /**修复一个bug，宽度不填满问题，感谢热心兄弟的慧眼*/
+        /**修复一个bug，宽度不填满问题*/
         LayoutParams lp = new LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT,
@@ -698,6 +690,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IMediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
             new IMediaPlayer.OnBufferingUpdateListener() {
                 public void onBufferingUpdate(IMediaPlayer mp, int percent) {
+                    Log.i(TAG,"mBufferingUpdateListener:"+percent);
                     mCurrentBufferPercentage = percent;
                 }
             };

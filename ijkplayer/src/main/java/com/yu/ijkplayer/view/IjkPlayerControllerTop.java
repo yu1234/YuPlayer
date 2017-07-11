@@ -184,13 +184,10 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
             ImmersionBar.with(this.activity).transparentNavigationBar().navigationBarColor(R.color.c_light_black).hideBar(BarHide.FLAG_SHOW_BAR).init();
             ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_STATUS_BAR).init();
             int navBarHeight = SrceenUtils.getNavigationBarSize(this.activity).x;
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-            int cW=this.getWidth();
-            if( params.width>0){
-                cW= params.width;
-            }
-            int w =cW- navBarHeight;
+            int realW = SrceenUtils.getRealScreenSize(this.activity).x;
+            int w =realW- navBarHeight;
             if (w > 0) {
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
                 params.width = w;
                 this.setLayoutParams(params);
             }
@@ -204,17 +201,6 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
     private void hideView() {
         if (ObjectUtil.isNotNull(this.activity)) {
             ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_BAR).fullScreen(false).init();
-            int navBarHeight = SrceenUtils.getNavigationBarSize(this.activity).x;
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-            int cW=this.getWidth();
-            if( params.width>0){
-                cW= params.width;
-            }
-            int w = cW+ navBarHeight;
-            if (w > navBarHeight) {
-                params.width = w;
-                this.setLayoutParams(params);
-            }
         }
         this.setVisibility(GONE);
     }

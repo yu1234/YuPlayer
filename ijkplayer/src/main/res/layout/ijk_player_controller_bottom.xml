@@ -12,6 +12,7 @@
         android:layout_marginBottom="15dp">
 
         <ImageView
+            android:id="@+id/player_play_c"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
@@ -33,7 +34,7 @@
             android:orientation="vertical">
 
             <SeekBar
-                android:id="@+id/app_video_seekBar"
+                android:id="@+id/ijk_player_seekBar"
                 style="@android:style/Widget.DeviceDefault.SeekBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
