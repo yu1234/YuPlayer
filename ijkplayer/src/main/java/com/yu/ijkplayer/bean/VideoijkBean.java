@@ -28,7 +28,7 @@ public class VideoijkBean {
      */
     private int id;
     /**
-     * 分辨率名称
+     * 分辨率
      */
     private String stream;
     /**
@@ -54,6 +54,18 @@ public class VideoijkBean {
      * 标题
      */
     private String title;
+
+    /**
+     * 宽
+     * @return
+     */
+    private int width;
+
+    /**
+     * 高
+     * @return
+     */
+    private int height;
 
     public int getId() {
         return id;
@@ -109,6 +121,22 @@ public class VideoijkBean {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     @Override

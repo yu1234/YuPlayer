@@ -23,10 +23,13 @@ import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
+import com.yu.ijkplayer.bean.MediaQuality;
 import com.yu.ijkplayer.bean.PlayerListenerCode;
+import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.impl.PlayerCompletion;
 import com.yu.ijkplayer.utils.NetworkUtils;
+import com.yu.ijkplayer.utils.ScreenRotateUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -233,10 +236,30 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
             ijkVideoView.setOnCompletionListener(this);
             ijkVideoView.start();
             controllerBottom.setPlayer(ijkVideoView);
+            controllerCenter.setPlayer(ijkVideoView);
             EventBus.getDefault().post(PlayerListenerCode.START);
         } else {
             //TODO 播放错误
             //showStatus(mActivity.getResources().getString(R.string.not_support));
+        }
+        return this;
+    }
+
+    /**
+     * 设置分辨率
+     */
+    public IjkPlayerView setResolution(int height) {
+        MediaQuality mediaQuality = MediaQuality.getMediaQuality(height);
+        EventBus.getDefault().post(mediaQuality);
+        return this;
+    }
+
+    /**
+     * 设置重力感应
+     */
+    public IjkPlayerView setGravitySensor(boolean isSupportGravitySensor) {
+        if (isSupportGravitySensor) {
+            ScreenRotateUtil.getInstance(this.activity).toggleRotate();
         }
         return this;
     }
@@ -275,7 +298,11 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
 
             @Override
             public void onFinish() {
-                hideControllerView();
+                if (ObjectUtil.isNotNull(ijkVideoView) && ijkVideoView.isPlaying()) {
+                    hideControllerView();
+                } else {
+                    hideAfterTimeout();
+                }
             }
         };
         this.countDownTimer.start();
@@ -288,16 +315,6 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         EventBus.getDefault().post(playerCompletion);
     }
 
-
-    /**
-     * 播放过程监听
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(PlayerListenerCode code) {
-        if (PlayerListenerCode.RESTART == code) {//重新播放
-            this.startPlay();
-        }
-    }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -374,14 +391,30 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
                 float deltaX = mOldX - e2.getX();
                 if (isDownTouch) {
                     isLandscape = Math.abs(distanceX) >= Math.abs(distanceY);
+                    isVolume = mOldX > screenWidthPixels * 0.5f;
+                    isDownTouch = false;
                 }
-
                 if (isLandscape) {
                     /**进度设置*/
                     gestureListenerCode = GestureListenerCode.PROGRESS_SLIDE;
                     gestureListenerCode.setPercent(-deltaX / ijkVideoView.getWidth());
                     EventBus.getDefault().post(gestureListenerCode);
+                } else {
+                    int h = ijkVideoView.getHeight();
+                    float percent = deltaY / h;
+                    if (isVolume) {
+                        /**声音设置*/
+                        gestureListenerCode = GestureListenerCode.VOLUME_SLIDE;
+                        gestureListenerCode.setPercent(percent);
+                        EventBus.getDefault().post(gestureListenerCode);
+                    } else {
+                        /**亮度设置*/
+                        gestureListenerCode = GestureListenerCode.BRIGHTNESS_SLIDE;
+                        gestureListenerCode.setPercent(percent);
+                        EventBus.getDefault().post(gestureListenerCode);
+                    }
                 }
+
             }
             return super.onScroll(e1, e2, distanceX, distanceY);
         }
@@ -398,6 +431,30 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
                 showControllerView();
             }
             return true;
+        }
+    }
+/**
+ * ==========================================================消息监听函数====================================
+ */
+    /**
+     * 播放过程监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlayerListenerCode code) {
+        if (PlayerListenerCode.RESTART == code) {//重新播放
+            this.startPlay();
+        }
+    }
+
+    /**
+     * 锁屏消息监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(ScreenLock screenLock) {
+        if (ScreenLock.UNLOCK == screenLock) {
+            showControllerView();
+        } else if (ScreenLock.LOCK == screenLock) {
+            hideControllerView();
         }
     }
 }

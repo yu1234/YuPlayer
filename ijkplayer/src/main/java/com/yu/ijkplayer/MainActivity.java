@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -26,6 +27,7 @@ import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.listener.OnPlayerBackListener;
 import com.yu.ijkplayer.listener.OnShowThumbnailListener;
 import com.yu.ijkplayer.utils.PlayerUtil;
+import com.yu.ijkplayer.utils.ScreenRotateUtil;
 import com.yu.ijkplayer.view.IjkPlayerView;
 import com.yu.ijkplayer.view.IjkVideoView;
 import com.yu.ijkplayer.view.PlayStateParams;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ijk_player);
         ButterKnife.bind(this);
+        ScreenRotateUtil.getInstance(this).start(this);
         initPlayer();
     }
 
@@ -63,12 +66,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         EventBus.getDefault().post(PlayerListenerCode.RESUME);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        ScreenRotateUtil.getInstance(this).stop();
         EventBus.getDefault().post(PlayerListenerCode.RELEASE);
         EventBus.getDefault().post(EventBusCode.ACTIVITY_FINISH);
     }
@@ -94,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
                         .setScaleType(PlayStateParams.fitparent)
                         .forbidTouch(false)
                         .setPlaySource(bean.getUrl())
+                        .setResolution(bean.getHeight())
+                        .setGravitySensor(true)
                         .startPlay();
             }
 

@@ -12,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
  * Created by igreentree on 2017/7/10 0010.
  */
 
-public class SrceenUtils {
+public class ScreenUtils {
 
     public static Point getNavigationBarSize(Context context) {
         Point appUsableSize = getAppUsableScreenSize(context);

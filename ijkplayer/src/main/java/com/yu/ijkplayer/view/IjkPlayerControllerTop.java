@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.BatteryManager;
 import android.support.annotation.Nullable;
@@ -28,9 +27,10 @@ import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.NetWorkStatus;
+import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.receiver.PlayerReceiver;
 import com.yu.ijkplayer.utils.NetworkUtils;
-import com.yu.ijkplayer.utils.SrceenUtils;
+import com.yu.ijkplayer.utils.ScreenUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -56,6 +56,10 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      * 广播监听
      */
     private PlayerReceiver receiver;
+    /**
+     * 当前屏幕是否锁屏 默认为没有锁屏
+     */
+    private ScreenLock screenLock = ScreenLock.UNLOCK;
     /**
      * 控件注入
      */
@@ -124,6 +128,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      * 参数初始化
      */
     private void initParams() {
+        //锁屏参数初始化
+        screenLock = ScreenLock.UNLOCK;
         //网络状态初始化
         NetWorkStatus networkStatus = NetworkUtils.getNetworkStatus(this.activity);
         if (ObjectUtil.isNotNull(this.networkStatus)) {
@@ -180,19 +186,21 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      * 显示上层控制页面
      */
     private void showView() {
-        if (ObjectUtil.isNotNull(this.activity)) {
-            ImmersionBar.with(this.activity).transparentNavigationBar().navigationBarColor(R.color.c_light_black).hideBar(BarHide.FLAG_SHOW_BAR).init();
-            ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_STATUS_BAR).init();
-            int navBarHeight = SrceenUtils.getNavigationBarSize(this.activity).x;
-            int realW = SrceenUtils.getRealScreenSize(this.activity).x;
-            int w =realW- navBarHeight;
-            if (w > 0) {
-                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-                params.width = w;
-                this.setLayoutParams(params);
+        if (ScreenLock.UNLOCK == this.screenLock) {
+            if (ObjectUtil.isNotNull(this.activity)) {
+                ImmersionBar.with(this.activity).transparentNavigationBar().navigationBarColor(R.color.c_light_black).hideBar(BarHide.FLAG_SHOW_BAR).init();
+                ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_STATUS_BAR).init();
+                int navBarHeight = ScreenUtils.getNavigationBarSize(this.activity).x;
+                int realW = ScreenUtils.getRealScreenSize(this.activity).x;
+                int w = realW - navBarHeight;
+                if (w > 0) {
+                    FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
+                    params.width = w;
+                    this.setLayoutParams(params);
+                }
             }
+            this.setVisibility(VISIBLE);
         }
-        this.setVisibility(VISIBLE);
     }
 
     /**
@@ -232,7 +240,9 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
         }
     }
 
-
+/**
+ * ==========================================================消息监听函数====================================
+ */
     /**
      * eventBus 消息监听
      */
@@ -271,5 +281,11 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
         }
     }
 
-
+    /**
+     * 锁屏消息监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(ScreenLock screenLock) {
+        this.screenLock = screenLock;
+    }
 }

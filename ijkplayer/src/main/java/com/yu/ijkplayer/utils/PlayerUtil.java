@@ -4,19 +4,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkplayer.MainActivity;
 import com.yu.ijkplayer.bean.VideoijkBean;
+import com.yu.ijkplayer.view.IjkPlayerControllerBottom;
 
 /**
  * Created by igreentree on 2017/7/7 0007.
  */
 
 public class PlayerUtil {
+    private static final String TAG = PlayerUtil.class.getSimpleName();
+
     public static void playVideo(Context context, Uri uri) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.setData(uri);
@@ -38,6 +43,13 @@ public class PlayerUtil {
             //获取缩略图
             Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Video.Thumbnails.MINI_KIND);
             bean.setThumbnails(thumbnail);
+            //获取分辨率
+            MediaMetadataRetriever retr = new MediaMetadataRetriever();
+            retr.setDataSource(path);
+            Bitmap bm = retr.getFrameAtTime();
+            bean.setStream(bm.getHeight() + "");
+            bean.setWidth(bm.getWidth());
+            bean.setHeight(bm.getHeight());
             cursor.close();
         }
         return bean;

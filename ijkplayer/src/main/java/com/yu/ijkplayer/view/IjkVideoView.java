@@ -690,7 +690,6 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IMediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
             new IMediaPlayer.OnBufferingUpdateListener() {
                 public void onBufferingUpdate(IMediaPlayer mp, int percent) {
-                    Log.i(TAG,"mBufferingUpdateListener:"+percent);
                     mCurrentBufferPercentage = percent;
                 }
             };
@@ -896,7 +895,15 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         }
         mTargetState = PlayStateParams.STATE_PLAYING;
     }
-
+    public void start(long seekTime) {
+        if (isInPlaybackState()) {
+            mMediaPlayer.start();
+            mMediaPlayer.seekTo(seekTime);
+            mCurrentState = PlayStateParams.STATE_PLAYING;
+        } else {
+        }
+        mTargetState = PlayStateParams.STATE_PLAYING;
+    }
     @Override
     public void pause() {
         if (isInPlaybackState()) {
@@ -1071,4 +1078,6 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             }
         }
     }
+
+
 }

@@ -2,15 +2,10 @@ package com.yu.ijkplayer.view;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.res.Resources;
-import android.os.BatteryManager;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -18,33 +13,28 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.gyf.barlibrary.BarHide;
-import com.gyf.barlibrary.ImmersionBar;
-import com.xiaoleilu.hutool.date.DateUtil;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
-import com.yu.ijkplayer.bean.NetWorkStatus;
+import com.yu.ijkplayer.bean.MediaQuality;
 import com.yu.ijkplayer.bean.PlayMode;
 import com.yu.ijkplayer.bean.PlayerListenerCode;
+import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.impl.PlayerCompletion;
-import com.yu.ijkplayer.utils.NetworkUtils;
 import com.yu.ijkplayer.utils.PlayerUtil;
-import com.yu.ijkplayer.utils.SrceenUtils;
+import com.yu.ijkplayer.utils.ScreenUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 /**
  * Created by igreentree on 2017/7/7 0007.
@@ -81,6 +71,10 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      */
     private static final PlayMode PLAY_MODE = PlayMode.CYCLE;
     /**
+     * 当前屏幕是否锁屏 默认为没有锁屏
+     */
+    private ScreenLock screenLock = ScreenLock.UNLOCK;
+    /**
      * 控件注入
      */
     @BindView(R2.id.ijk_player_seekBar)
@@ -90,9 +84,15 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     @BindView(R2.id.video_endTime)
     TextView videoEndTime;
     @BindView(R2.id.video_play)
-    ImageView videpPlay;
+    ImageView videoPlay;
     @BindView(R2.id.player_play_c)
     ImageView playerPlayC;
+    @BindView(R2.id.ijk_player_media_quality_txt)
+    TextView ijkPlayerMediaQualityTxt;
+    @BindView(R2.id.ijk_player_media_quality_icon)
+    ImageView ijkPlayerMediaQualityIcon;
+    @BindView(R2.id.ijk_player_lock_box)
+    LinearLayout ijkPlayerLockBox;
 
 
     public IjkPlayerControllerBottom(Context context) {
@@ -128,7 +128,8 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
         if (ObjectUtil.isNotNull(this.playerPlayC)) {
             this.playerPlayC.setImageResource(R.drawable.ic_tv_stop);
         }
-
+        //锁屏参数初始化
+        screenLock = ScreenLock.UNLOCK;
     }
 
     /**
@@ -139,11 +140,24 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
         if (ObjectUtil.isNotNull(this.playerPlayC)) {
             this.playerPlayC.setOnClickListener(this);
         }
-        if (ObjectUtil.isNotNull(this.videpPlay)) {
-            this.videpPlay.setOnClickListener(this);
+        if (ObjectUtil.isNotNull(this.videoPlay)) {
+            this.videoPlay.setOnClickListener(this);
+        }
+        //进度条注册
+        if (ObjectUtil.isNotNull(this.playerSeekBar)) {
+            this.playerSeekBar.setOnSeekBarChangeListener(mSeekListener);
+        }
+        //锁屏点击事件注册
+        if (ObjectUtil.isNotNull(this.ijkPlayerLockBox)) {
+            this.ijkPlayerLockBox.setOnClickListener(this);
         }
     }
 
+    /**
+     * 点击事件回调
+     *
+     * @param v
+     */
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.player_play_c) {
@@ -163,6 +177,13 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
                     this.onPlayerResume();
                 }
             }
+        } else if (v.getId() == R.id.ijk_player_lock_box) {
+            if (this.screenLock == ScreenLock.UNLOCK) {
+                this.screenLock = ScreenLock.LOCK;
+            } else if (this.screenLock == ScreenLock.LOCK) {
+                this.screenLock = ScreenLock.UNLOCK;
+            }
+            EventBus.getDefault().post(this.screenLock);
         }
     }
 
@@ -170,15 +191,18 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * 显示上层控制页面
      */
     private void showView() {
-        int navBarHeight = SrceenUtils.getNavigationBarSize(this.activity).x;
-        int realW = SrceenUtils.getRealScreenSize(this.activity).x;
-        int w = realW - navBarHeight;
-        if (w > 0) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-            params.width = w;
-            this.setLayoutParams(params);
+        if (ScreenLock.UNLOCK == this.screenLock) {
+            int navBarHeight = ScreenUtils.getNavigationBarSize(this.activity).x;
+            int realW = ScreenUtils.getRealScreenSize(this.activity).x;
+            int w = realW - navBarHeight;
+            if (w > 0) {
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
+                params.width = w;
+                this.setLayoutParams(params);
+            }
+            this.setVisibility(VISIBLE);
         }
-        this.setVisibility(VISIBLE);
+
     }
 
     /**
@@ -193,9 +217,9 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     /**
      * 同步进度
      */
-    private void syncProgress() {
+    private void syncProgress(long position) {
         if (ObjectUtil.isNotNull(this.player)) {
-            long position = this.player.getCurrentPosition();
+            this.currentPosition = (int) position;
             long duration = this.player.getDuration();
             if (this.playerSeekBar != null) {
                 if (duration > 0) {
@@ -213,7 +237,12 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
             }
 
         }
+    }
 
+    private void syncProgress() {
+        if (ObjectUtil.isNotNull(this.player)) {
+            this.syncProgress(this.player.getCurrentPosition());
+        }
     }
 
     /**
@@ -228,7 +257,9 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                EventBus.getDefault().post(EventBusCode.PROGRESS_CHANGE);
+                if (status == PlayStateParams.STATE_PLAYING) {
+                    EventBus.getDefault().post(EventBusCode.PROGRESS_CHANGE);
+                }
             }
         };
         //开启定时器
@@ -252,14 +283,16 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * player.onPause();
      */
     public void onPlayerPause() {
+        Log.i(TAG, "onPlayerPause");
         if (ObjectUtil.isNotNull(this.player)) {
             this.bgState = (this.player.isPlaying() ? 0 : 1);
             status = PlayStateParams.STATE_PAUSED;
             if (this.player.isPlaying()) {
-                this.currentPosition = this.player.getCurrentPosition();
                 this.player.pause();
-                if (ObjectUtil.isNotNull(this.videpPlay)) {
-                    this.videpPlay.setImageResource(R.drawable.bili_player_play_can_play);
+                this.currentPosition = this.player.getCurrentPosition();
+                Log.i(TAG, "onPlayerPause：" + this.currentPosition);
+                if (ObjectUtil.isNotNull(this.videoPlay)) {
+                    this.videoPlay.setImageResource(R.drawable.bili_player_play_can_play);
                 }
                 if (ObjectUtil.isNotNull(this.playerPlayC)) {
                     this.playerPlayC.setImageResource(R.drawable.ic_tv_play);
@@ -276,17 +309,24 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * }
      */
     public void onPlayerResume() {
-        Log.i(TAG, "播放进度:" + currentPosition);
-        status = PlayStateParams.STATE_PLAYING;
+        Log.i(TAG, "onPlayerResume");
+
         if (ObjectUtil.isNotNull(this.player)) {
-            this.player.start();
-            this.player.seekTo(currentPosition);
+            Log.i(TAG, "onPlayerResume：" + this.currentPosition);
+            if (this.currentPosition == this.player.getCurrentPosition()) {
+                this.currentPosition = this.player.getCurrentPosition();
+                this.player.start();
+            } else {
+                this.player.start(this.currentPosition);
+            }
+
             if (ObjectUtil.isNotNull(this.playerPlayC)) {
                 this.playerPlayC.setImageResource(R.drawable.ic_tv_stop);
             }
-            if (ObjectUtil.isNotNull(this.videpPlay)) {
-                this.videpPlay.setImageResource(R.drawable.bili_player_play_can_pause);
+            if (ObjectUtil.isNotNull(this.videoPlay)) {
+                this.videoPlay.setImageResource(R.drawable.bili_player_play_can_pause);
             }
+            status = PlayStateParams.STATE_PLAYING;
             if (bgState == 1) {
                 onPlayerPause();
             }
@@ -299,6 +339,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * @return
      */
     public void onPlayerRelease() {
+        Log.i(TAG, "onPlayerRelease");
         if (ObjectUtil.isNotNull(this.player)) {
             this.player.stopPlayback();
             status = PlayStateParams.STATE_IDLE;
@@ -311,6 +352,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * @return
      */
     public void onPlayerStop() {
+        Log.i(TAG, "onPlayerStop");
         if (ObjectUtil.isNotNull(this.player)) {
             this.onPlayerRelease();
         }
@@ -320,12 +362,13 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * 开始播放
      */
     public void onPlayerStart() {
+        Log.i(TAG, "onPlayerStart");
         status = PlayStateParams.STATE_PLAYING;
         if (ObjectUtil.isNotNull(this.playerPlayC)) {
             this.playerPlayC.setImageResource(R.drawable.ic_tv_stop);
         }
-        if (ObjectUtil.isNotNull(this.videpPlay)) {
-            this.videpPlay.setImageResource(R.drawable.bili_player_play_can_pause);
+        if (ObjectUtil.isNotNull(this.videoPlay)) {
+            this.videoPlay.setImageResource(R.drawable.bili_player_play_can_pause);
         }
     }
 
@@ -334,6 +377,28 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      */
     public void onPlayerRestart() {
         EventBus.getDefault().post(PlayerListenerCode.RESTART);
+    }
+
+    /**
+     * 快进或者快退滑动改变进度
+     *
+     * @param percent
+     */
+    private void onProgressSlide(float percent) {
+        if (ObjectUtil.isNotNull(this.player)) {
+            int position = this.player.getCurrentPosition();
+            long duration = this.player.getDuration();
+            long deltaMax = Math.min(100 * 1000, duration - position);
+            long delta = (long) (deltaMax * percent);
+            long newPosition = delta + position;
+            if (newPosition > duration) {
+                newPosition = duration;
+            } else if (newPosition <= 0) {
+                newPosition = 0;
+            }
+            syncProgress(newPosition);
+        }
+
     }
 
 /**
@@ -400,19 +465,82 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
             this.onPlayerRelease();
         }
     }
+
     /**
      * 手势监听
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(GestureListenerCode code) {
-       if(GestureListenerCode.PROGRESS_SLIDE==code){//进度条滑动监听
+        if (ScreenLock.UNLOCK == this.screenLock) {//当解屏状态时才有执行权限
+            if (GestureListenerCode.PROGRESS_SLIDE == code) {//进度条滑动监听
+                Log.i(TAG, "进度条滑动百分比：" + code.getPercent());
+                if (ObjectUtil.isNotNull(this.player) && this.player.isPlaying()) {
+                    onPlayerPause();
+                }
+                onProgressSlide(code.getPercent());
+                this.setVisibility(VISIBLE);
+            } else if (GestureListenerCode.END_GESTURE == code) {//手势结束
+                if (code.getEndCode() == GestureListenerCode.PROGRESS_SLIDE) {
+                    Log.i(TAG, "进度条滑动手势结束");
+                    onPlayerResume();
+                    this.setVisibility(GONE);
+                }
+            }
+        }
+    }
 
-       }else if(GestureListenerCode.VOLUME_SLIDE==code){//声音滑动监听
+    /**
+     * 进度条滑动监听
+     */
+    private final SeekBar.OnSeekBarChangeListener mSeekListener = new SeekBar.OnSeekBarChangeListener() {
 
-       }else if(GestureListenerCode.BRIGHTNESS_SLIDE==code){//亮度滑动监听
+        /**数值的改变*/
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (ObjectUtil.isNotNull(player) && fromUser) {
+                long duration = player.getDuration();
+                int position = (int) ((duration * progress * 1.0) / 1000);
+                currentPosition = position;
+                syncProgress(currentPosition);
+            }
+        }
 
-       }else if(GestureListenerCode.END_GESTURE==code){//手势结束
+        /**开始拖动*/
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            if (ObjectUtil.isNotNull(player)) {
+                onPlayerPause();
+            }
+        }
 
-       }
+        /**停止拖动*/
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            if (ObjectUtil.isNotNull(player)) {
+                Log.i(TAG, "onStopTrackingTouch：" + currentPosition);
+                onPlayerResume();
+            }
+        }
+    };
+
+    /**
+     * eventBus 分辨率设置
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(MediaQuality mediaQuality) {
+        if (ObjectUtil.isNotNull(ijkPlayerMediaQualityIcon)) {
+            ijkPlayerMediaQualityIcon.setImageResource(mediaQuality.getIconResource());
+        }
+        if (ObjectUtil.isNotNull(ijkPlayerMediaQualityTxt)) {
+            ijkPlayerMediaQualityTxt.setText(mediaQuality.getName());
+        }
+    }
+
+    /**
+     * 锁屏消息监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(ScreenLock screenLock) {
+        this.screenLock = screenLock;
     }
 }
