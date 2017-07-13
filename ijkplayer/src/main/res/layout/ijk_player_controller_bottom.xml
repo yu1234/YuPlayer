@@ -22,13 +22,13 @@
     <LinearLayout
         android:id="@+id/app_video_process_panel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@color/c_light_black"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
@@ -43,15 +43,15 @@
                 android:id="@+id/app_video_center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
                 android:orientation="horizontal">
 
                 <RelativeLayout
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="left"
-                    android:layout_marginLeft="10dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1">
 
                     <TextView
@@ -67,7 +67,7 @@
                         android:id="@+id/dividing_line"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:layout_toRightOf="@id/video_currentTime"
+                        android:layout_toEndOf="@id/video_currentTime"
                         android:gravity="center"
                         android:text="/"
                         android:textColor="@android:color/white"
@@ -77,7 +77,7 @@
                         android:id="@+id/video_endTime"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:layout_toRightOf="@id/dividing_line"
+                        android:layout_toEndOf="@id/dividing_line"
                         android:gravity="center"
                         android:text="10:10"
                         android:textColor="@android:color/white"
@@ -96,24 +96,24 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:layout_marginRight="10dp"
+                        android:layout_marginEnd="10dp"
                         android:src="@drawable/bili_player_ctrl_play_previous" />
 
                     <ImageView
                         android:id="@+id/video_play"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_toRightOf="@id/video_previous"
+                        android:layout_toEndOf="@id/video_previous"
                         android:gravity="center"
                         android:padding="10dp"
-                        android:layout_marginRight="10dp"
+                        android:layout_marginEnd="10dp"
                         android:src="@drawable/bili_player_play_can_pause" />
 
                     <ImageView
                         android:id="@+id/app_video_next"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_toRightOf="@id/video_play"
+                        android:layout_toEndOf="@id/video_play"
                         android:gravity="center"
                         android:padding="10dp"
                         android:src="@drawable/bili_player_ctrl_play_next" />
@@ -151,8 +151,8 @@
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginRight="10dp"
-                        android:layout_toRightOf="@id/media_quality"
+                        android:layout_marginEnd="10dp"
+                        android:layout_toEndOf="@id/media_quality"
                         android:id="@+id/ijk_player_lock_box"
                         android:orientation="vertical">
 

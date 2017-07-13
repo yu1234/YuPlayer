@@ -1,4 +1,4 @@
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.controller;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.os.CountDownTimer;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -15,7 +14,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
@@ -26,10 +24,10 @@ import com.yu.ijkplayer.bean.GestureListenerCode;
 import com.yu.ijkplayer.bean.MediaQuality;
 import com.yu.ijkplayer.bean.PlayerListenerCode;
 import com.yu.ijkplayer.bean.ScreenLock;
-import com.yu.ijkplayer.bean.VideoijkBean;
 import com.yu.ijkplayer.impl.PlayerCompletion;
-import com.yu.ijkplayer.utils.NetworkUtils;
 import com.yu.ijkplayer.utils.ScreenRotateUtil;
+import com.yu.ijkplayer.view.playerView.IjkVideoView;
+import com.yu.ijkplayer.view.playerView.PlayStateParams;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

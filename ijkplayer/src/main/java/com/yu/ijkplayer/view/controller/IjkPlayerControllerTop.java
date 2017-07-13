@@ -1,4 +1,4 @@
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.controller;
 
 import android.app.Activity;
 import android.content.Context;
@@ -65,8 +65,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      */
     @BindView(R2.id.video_title)
     TextView videoTitle;
-    @BindView(R2.id.player_exit)
-    ImageView playerExit;
+    @BindView(R2.id.ijk_player_exit_icon)
+    ImageView ijkPlayerExitIcon;
     @BindView(R2.id.toolbar)
     Toolbar toolbar;
     @BindView((R2.id.orientation_overlay_button))
@@ -106,7 +106,7 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.player_exit) {
+        if (v.getId() == R.id.ijk_player_exit_icon) {
             if (ObjectUtil.isNotNull(this.activity)) {
                 this.activity.finish();
             }
@@ -163,8 +163,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      */
     private void registerListener() {
         //返回按键点击事件注册
-        if (ObjectUtil.isNotNull(this.playerExit)) {
-            this.playerExit.setOnClickListener(this);
+        if (ObjectUtil.isNotNull(this.ijkPlayerExitIcon)) {
+            this.ijkPlayerExitIcon.setOnClickListener(this);
         }
         //屏幕旋转
         if (ObjectUtil.isNotNull(this.orientationOverlayButton)) {

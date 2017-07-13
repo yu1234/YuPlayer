@@ -14,25 +14,34 @@
         android:background="@color/c_light_black"
         app:titleTextColor="@android:color/white">
 
-        <ImageView
-            android:id="@+id/player_exit"
+        <LinearLayout
+            android:id="@+id/ijk_player_title_box"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="16dp"
-            android:src="@drawable/bili_player_back_button" />
-
-        <TextView
-            android:id="@+id/video_title"
+            android:layout_gravity="left"
             android:layout_marginLeft="15dp"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="marquee"
-            android:padding="8dp"
-            android:singleLine="true"
-            android:text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-            android:textColor="@android:color/white"
-            android:visibility="visible" />
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/ijk_player_exit_icon"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/bili_player_back_button" />
+
+            <TextView
+                android:id="@+id/video_title"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_weight="1"
+                android:ellipsize="marquee"
+                android:padding="8dp"
+                android:singleLine="true"
+                android:text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                android:textColor="@android:color/white"
+                android:visibility="visible" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -84,13 +93,22 @@
 
         </LinearLayout>
 
-
-        <ImageView
-            android:id="@+id/player_menu"
+        <LinearLayout
+            android:id="@+id/ijk_player_menu_box"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:src="@drawable/ic_more_vert_white_24dp" />
+            android:layout_height="match_parent"
+            android:layout_gravity="right">
+
+            <TextView
+                android:id="@+id/ijk_player_setting_txt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginRight="5dp"
+                android:text="@string/ijk_player_setting_txt"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
     </android.support.v7.widget.Toolbar>
 
     <LinearLayout

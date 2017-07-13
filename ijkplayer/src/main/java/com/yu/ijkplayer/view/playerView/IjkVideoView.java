@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.playerView;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
@@ -35,6 +35,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.MediaController;
+
+import com.yu.ijkplayer.impl.IMediaController;
+import com.yu.ijkplayer.impl.IRenderView;
 
 import java.io.File;
 import java.io.IOException;

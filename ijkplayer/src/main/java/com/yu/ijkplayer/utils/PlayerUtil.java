@@ -8,12 +8,10 @@ import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkplayer.MainActivity;
 import com.yu.ijkplayer.bean.VideoijkBean;
-import com.yu.ijkplayer.view.IjkPlayerControllerBottom;
 
 /**
  * Created by igreentree on 2017/7/7 0007.

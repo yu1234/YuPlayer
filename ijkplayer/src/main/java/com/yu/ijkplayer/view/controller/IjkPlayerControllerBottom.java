@@ -1,4 +1,4 @@
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.controller;
 
 import android.app.Activity;
 import android.content.Context;
@@ -25,6 +25,8 @@ import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.impl.PlayerCompletion;
 import com.yu.ijkplayer.utils.PlayerUtil;
 import com.yu.ijkplayer.utils.ScreenUtils;
+import com.yu.ijkplayer.view.playerView.IjkVideoView;
+import com.yu.ijkplayer.view.playerView.PlayStateParams;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

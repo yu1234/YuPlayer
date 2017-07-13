@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.playerView;
 
 import android.view.View;
+
+import com.yu.ijkplayer.impl.IRenderView;
 
 import java.lang.ref.WeakReference;
 

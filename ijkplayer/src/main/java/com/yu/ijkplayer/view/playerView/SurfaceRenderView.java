@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.playerView;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -31,6 +31,8 @@ import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.yu.ijkplayer.impl.IRenderView;
+
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,16 +42,6 @@ import tv.danmaku.ijk.media.player.ISurfaceTextureHolder;
 
 /**
  * ========================================
- * <p>
- * 版 权：dou361.com 版权所有 （C） 2015
- * <p>
- * 作 者：陈冠明
- * <p>
- * 个人网站：http://www.dou361.com
- * <p>
- * 版 本：1.0
- * <p>
- * 创建日期：2016/7/22 16:38
  * <p>
  * 描 述：这个是3.0以上的一个播放器显示view
  * <p>

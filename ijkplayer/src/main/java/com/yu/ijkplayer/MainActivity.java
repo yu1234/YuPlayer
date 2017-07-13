@@ -1,44 +1,26 @@
 package com.yu.ijkplayer;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
-import android.view.OrientationEventListener;
-import android.view.View;
-import android.widget.ImageView;
 
-import com.bumptech.glide.Glide;
-import com.gyf.barlibrary.BarHide;
-import com.gyf.barlibrary.ImmersionBar;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.PlayerListenerCode;
 import com.yu.ijkplayer.bean.VideoijkBean;
-import com.yu.ijkplayer.listener.OnPlayerBackListener;
-import com.yu.ijkplayer.listener.OnShowThumbnailListener;
 import com.yu.ijkplayer.utils.PlayerUtil;
 import com.yu.ijkplayer.utils.ScreenRotateUtil;
-import com.yu.ijkplayer.view.IjkPlayerView;
-import com.yu.ijkplayer.view.IjkVideoView;
-import com.yu.ijkplayer.view.PlayStateParams;
-import com.yu.ijkplayer.view.PlayerView;
+import com.yu.ijkplayer.view.controller.IjkPlayerView;
+import com.yu.ijkplayer.view.playerView.PlayStateParams;
 
 import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-
-import static android.R.attr.targetSdkVersion;
 
 /**
  * Created by igreentree on 2017/6/28 0028.

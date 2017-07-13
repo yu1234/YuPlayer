@@ -1,4 +1,4 @@
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.view.controller;
 
 import android.app.Activity;
 import android.content.Context;
@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.xiaoleilu.hutool.util.ObjectUtil;
@@ -21,6 +20,7 @@ import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
 import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.utils.PlayerUtil;
+import com.yu.ijkplayer.view.playerView.IjkVideoView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.yu.ijkplayer.view;
+package com.yu.ijkplayer.impl;
 
 import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
