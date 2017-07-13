@@ -19,10 +19,10 @@ import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
-import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
 import com.yu.ijkplayer.bean.MediaQuality;
-import com.yu.ijkplayer.bean.PlayerListenerCode;
+import com.yu.ijkplayer.bean.PlayerControllerViewEnum;
+import com.yu.ijkplayer.bean.PlayerListenerEnum;
 import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.impl.PlayerCompletion;
 import com.yu.ijkplayer.utils.ScreenRotateUtil;
@@ -235,7 +235,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
             ijkVideoView.start();
             controllerBottom.setPlayer(ijkVideoView);
             controllerCenter.setPlayer(ijkVideoView);
-            EventBus.getDefault().post(PlayerListenerCode.START);
+            EventBus.getDefault().post(PlayerListenerEnum.IN_START);
         } else {
             //TODO 播放错误
             //showStatus(mActivity.getResources().getString(R.string.not_support));
@@ -268,7 +268,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
      */
     private void showControllerView() {
         this.isControllerViewShow = true;
-        EventBus.getDefault().post(EventBusCode.SHOW_VIEW);
+        EventBus.getDefault().post(PlayerControllerViewEnum.OUT_SHOW);
         hideAfterTimeout();
     }
 
@@ -277,7 +277,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
      */
     private void hideControllerView() {
         this.isControllerViewShow = false;
-        EventBus.getDefault().post(EventBusCode.HIDE_VIEW);
+        EventBus.getDefault().post(PlayerControllerViewEnum.OUT_HIDE);
     }
 
     /**
@@ -360,9 +360,9 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
             /**双击暂停\开始事件*/
             if (ObjectUtil.isNotNull(ijkVideoView)) {
                 if (ijkVideoView.isPlaying()) {
-                    EventBus.getDefault().post(PlayerListenerCode.PAUSE);
+                    EventBus.getDefault().post(PlayerListenerEnum.IN_PAUSE);
                 } else {
-                    EventBus.getDefault().post(PlayerListenerCode.RESUME);
+                    EventBus.getDefault().post(PlayerListenerEnum.IN_RESUME);
                 }
             }
             return true;
@@ -438,8 +438,8 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
      * 播放过程监听
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(PlayerListenerCode code) {
-        if (PlayerListenerCode.RESTART == code) {//重新播放
+    public void onMessageEvent(PlayerListenerEnum code) {
+        if (PlayerListenerEnum.OUT_RESTART == code) {//重新播放
             this.startPlay();
         }
     }
@@ -452,6 +452,18 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         if (ScreenLock.UNLOCK == screenLock) {
             showControllerView();
         } else if (ScreenLock.LOCK == screenLock) {
+            hideControllerView();
+        }
+    }
+
+    /**
+     * 控制界面显示/隐藏监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlayerControllerViewEnum controllerViewEnum) {
+        if (PlayerControllerViewEnum.IN_SHOW == controllerViewEnum) {
+            showControllerView();
+        } else if (PlayerControllerViewEnum.IN_HIDE == controllerViewEnum) {
             hideControllerView();
         }
     }

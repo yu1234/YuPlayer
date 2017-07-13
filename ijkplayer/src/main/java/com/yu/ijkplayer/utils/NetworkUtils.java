@@ -1,12 +1,11 @@
 package com.yu.ijkplayer.utils;
 
-import android.app.usage.NetworkStats;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
-import com.yu.ijkplayer.bean.NetWorkStatus;
+import com.yu.ijkplayer.bean.NetworkStatusEnum;
 
 /**
  * ========================================
@@ -77,24 +76,24 @@ public class NetworkUtils {
         return -1;
     }
 
-    public static NetWorkStatus getNetworkStatus(Context context) {
+    public static NetworkStatusEnum getNetworkStatus(Context context) {
         int type = getNetworkType(context);
-        if (NetWorkStatus.NO_INTERNET.getCode() == type) {
-            return NetWorkStatus.NO_INTERNET;
-        } else if (NetWorkStatus.DISCONNECT.getCode() == type) {
-            return NetWorkStatus.DISCONNECT;
-        } else if (NetWorkStatus.INTERNET.getCode() == type) {
-            return NetWorkStatus.INTERNET;
-        } else if (NetWorkStatus.WIFI.getCode() == type) {
-            return NetWorkStatus.WIFI;
-        } else if (NetWorkStatus.MOVE_2G.getCode() == type) {
-            return NetWorkStatus.MOVE_2G;
-        } else if (NetWorkStatus.MOVE_3G.getCode() == type) {
-            return NetWorkStatus.MOVE_3G;
-        } else if (NetWorkStatus.MOVE_4G.getCode() == type) {
-            return NetWorkStatus.MOVE_4G;
+        if (NetworkStatusEnum.NO_INTERNET.getCode() == type) {
+            return NetworkStatusEnum.NO_INTERNET;
+        } else if (NetworkStatusEnum.DISCONNECT.getCode() == type) {
+            return NetworkStatusEnum.DISCONNECT;
+        } else if (NetworkStatusEnum.INTERNET.getCode() == type) {
+            return NetworkStatusEnum.INTERNET;
+        } else if (NetworkStatusEnum.WIFI.getCode() == type) {
+            return NetworkStatusEnum.WIFI;
+        } else if (NetworkStatusEnum.MOVE_2G.getCode() == type) {
+            return NetworkStatusEnum.MOVE_2G;
+        } else if (NetworkStatusEnum.MOVE_3G.getCode() == type) {
+            return NetworkStatusEnum.MOVE_3G;
+        } else if (NetworkStatusEnum.MOVE_4G.getCode() == type) {
+            return NetworkStatusEnum.MOVE_4G;
         } else {
-            return NetWorkStatus.UNKNOW;
+            return NetworkStatusEnum.UN_KNOW;
         }
     }
 }

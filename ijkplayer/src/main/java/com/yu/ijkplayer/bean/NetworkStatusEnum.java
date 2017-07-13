@@ -4,8 +4,8 @@ package com.yu.ijkplayer.bean;
  * Created by igreentree on 2017/7/10 0010.
  */
 
-public enum NetWorkStatus {
-    UNKNOW(-1, "未知"),
+public enum NetworkStatusEnum {
+    UN_KNOW(-1, "未知"),
     NO_INTERNET(0, "没有网络"),
     DISCONNECT(1, "网络断开"),
     INTERNET(2, "以太网"),
@@ -16,7 +16,7 @@ public enum NetWorkStatus {
     private int code;
     private String msg;
 
-    NetWorkStatus(int i, String msg) {
+    NetworkStatusEnum(int i, String msg) {
         this.code = i;
         this.msg = msg;
     }

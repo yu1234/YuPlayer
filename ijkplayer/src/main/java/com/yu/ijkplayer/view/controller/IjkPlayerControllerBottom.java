@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -20,11 +19,11 @@ import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
 import com.yu.ijkplayer.bean.MediaQuality;
 import com.yu.ijkplayer.bean.PlayMode;
-import com.yu.ijkplayer.bean.PlayerListenerCode;
+import com.yu.ijkplayer.bean.PlayerControllerViewEnum;
+import com.yu.ijkplayer.bean.PlayerListenerEnum;
 import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.impl.PlayerCompletion;
 import com.yu.ijkplayer.utils.PlayerUtil;
-import com.yu.ijkplayer.utils.ScreenUtils;
 import com.yu.ijkplayer.view.playerView.IjkVideoView;
 import com.yu.ijkplayer.view.playerView.PlayStateParams;
 
@@ -194,14 +193,6 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      */
     private void showView() {
         if (ScreenLock.UNLOCK == this.screenLock) {
-            int navBarHeight = ScreenUtils.getNavigationBarSize(this.activity).x;
-            int realW = ScreenUtils.getRealScreenSize(this.activity).x;
-            int w = realW - navBarHeight;
-            if (w > 0) {
-                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-                params.width = w;
-                this.setLayoutParams(params);
-            }
             this.setVisibility(VISIBLE);
         }
 
@@ -378,7 +369,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * 开始播放
      */
     public void onPlayerRestart() {
-        EventBus.getDefault().post(PlayerListenerCode.RESTART);
+        EventBus.getDefault().post(PlayerListenerEnum.OUT_RESTART);
     }
 
     /**
@@ -411,17 +402,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(EventBusCode eventBusCode) {
-        if (EventBusCode.SHOW_VIEW == eventBusCode) {//显示view
-            if (ObjectUtil.isNotNull(this.activity)) {
-                this.showView();
-            }
-
-        } else if (EventBusCode.HIDE_VIEW == eventBusCode) {//隐藏view
-            if (ObjectUtil.isNotNull(this.activity)) {
-                this.hideView();
-            }
-
-        } else if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
+       if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
             EventBus.getDefault().unregister(this);
         } else if (EventBusCode.PROGRESS_CHANGE == eventBusCode) {
             syncProgress();
@@ -454,16 +435,16 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      * 播放过程监听
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(PlayerListenerCode code) {
-        if (PlayerListenerCode.START == code) {  //播放开始
+    public void onMessageEvent(PlayerListenerEnum code) {
+        if (PlayerListenerEnum.IN_START == code) {  //播放开始
             this.onPlayerStart();
-        } else if (PlayerListenerCode.PAUSE == code) {//播放暂停
+        } else if (PlayerListenerEnum.IN_PAUSE == code) {//播放暂停
             this.onPlayerPause();
-        } else if (PlayerListenerCode.RESUME == code) {//播放恢复
+        } else if (PlayerListenerEnum.IN_RESUME == code) {//播放恢复
             this.onPlayerResume();
-        } else if (PlayerListenerCode.STOP == code) {//播放停止
+        } else if (PlayerListenerEnum.IN_STOP == code) {//播放停止
             this.onPlayerStop();
-        } else if (PlayerListenerCode.RELEASE == code) {//播放释放
+        } else if (PlayerListenerEnum.IN_RELEASE == code) {//播放释放
             this.onPlayerRelease();
         }
     }
@@ -544,5 +525,16 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(ScreenLock screenLock) {
         this.screenLock = screenLock;
+    }
+    /**
+     * 控制界面显示/隐藏监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlayerControllerViewEnum controllerViewEnum) {
+        if (PlayerControllerViewEnum.OUT_SHOW == controllerViewEnum) {//显示view
+            this.showView();
+        } else if (PlayerControllerViewEnum.OUT_HIDE == controllerViewEnum) {//隐藏view
+            this.hideView();
+        }
     }
 }

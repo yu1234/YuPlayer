@@ -18,6 +18,7 @@ import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
 import com.yu.ijkplayer.bean.GestureListenerCode;
+import com.yu.ijkplayer.bean.PlayerControllerViewEnum;
 import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.utils.PlayerUtil;
 import com.yu.ijkplayer.view.playerView.IjkVideoView;
@@ -354,13 +355,13 @@ public class IjkPlayerControllerCenter extends LinearLayout implements View.OnCl
     }
 
     /**
-     * eventBus 消息监听
+     * 控制界面显示/隐藏监听
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(EventBusCode eventBusCode) {
-        if (EventBusCode.SHOW_VIEW == eventBusCode) {//显示view
+    public void onMessageEvent(PlayerControllerViewEnum controllerViewEnum) {
+        if (PlayerControllerViewEnum.OUT_SHOW == controllerViewEnum) {//显示view
             this.showView();
-        } else if (EventBusCode.HIDE_VIEW == eventBusCode) {//隐藏view
+        } else if (PlayerControllerViewEnum.OUT_HIDE == controllerViewEnum) {//隐藏view
             this.hideView();
         }
     }

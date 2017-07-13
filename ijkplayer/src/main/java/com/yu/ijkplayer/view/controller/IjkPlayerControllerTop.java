@@ -14,7 +14,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,11 +25,12 @@ import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkplayer.R;
 import com.yu.ijkplayer.R2;
 import com.yu.ijkplayer.bean.EventBusCode;
-import com.yu.ijkplayer.bean.NetWorkStatus;
+import com.yu.ijkplayer.bean.NetworkStatusEnum;
+import com.yu.ijkplayer.bean.PlayerControllerViewEnum;
+import com.yu.ijkplayer.bean.PlayerSettingEnum;
 import com.yu.ijkplayer.bean.ScreenLock;
 import com.yu.ijkplayer.receiver.PlayerReceiver;
 import com.yu.ijkplayer.utils.NetworkUtils;
-import com.yu.ijkplayer.utils.ScreenUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -79,6 +79,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
     TextView battery;
     @BindView((R2.id.battery_image))
     ImageView batteryImage;
+    @BindView((R2.id.ijk_player_setting_txt))
+    TextView ijkPlayerSettingTxt;
 
     public IjkPlayerControllerTop(Context context) {
         this(context, null);
@@ -121,6 +123,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
                     this.activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                 }
             }
+        } else if (v.getId() == R.id.ijk_player_setting_txt) {
+            EventBus.getDefault().post(PlayerSettingEnum.IN_SHOW);
         }
     }
 
@@ -131,7 +135,7 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
         //锁屏参数初始化
         screenLock = ScreenLock.UNLOCK;
         //网络状态初始化
-        NetWorkStatus networkStatus = NetworkUtils.getNetworkStatus(this.activity);
+        NetworkStatusEnum networkStatus = NetworkUtils.getNetworkStatus(this.activity);
         if (ObjectUtil.isNotNull(this.networkStatus)) {
             this.networkStatus.setText(networkStatus.getMsg());
         }
@@ -166,6 +170,10 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
         if (ObjectUtil.isNotNull(this.ijkPlayerExitIcon)) {
             this.ijkPlayerExitIcon.setOnClickListener(this);
         }
+        //设置按钮注册
+        if (ObjectUtil.isNotNull(this.ijkPlayerSettingTxt)) {
+            this.ijkPlayerSettingTxt.setOnClickListener(this);
+        }
         //屏幕旋转
         if (ObjectUtil.isNotNull(this.orientationOverlayButton)) {
             this.orientationOverlayButton.setOnClickListener(this);
@@ -188,16 +196,8 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
     private void showView() {
         if (ScreenLock.UNLOCK == this.screenLock) {
             if (ObjectUtil.isNotNull(this.activity)) {
-                ImmersionBar.with(this.activity).transparentNavigationBar().navigationBarColor(R.color.c_light_black).hideBar(BarHide.FLAG_SHOW_BAR).init();
+                ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_SHOW_BAR).init();
                 ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_STATUS_BAR).init();
-                int navBarHeight = ScreenUtils.getNavigationBarSize(this.activity).x;
-                int realW = ScreenUtils.getRealScreenSize(this.activity).x;
-                int w = realW - navBarHeight;
-                if (w > 0) {
-                    FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.getLayoutParams();
-                    params.width = w;
-                    this.setLayoutParams(params);
-                }
             }
             this.setVisibility(VISIBLE);
         }
@@ -208,7 +208,7 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      */
     private void hideView() {
         if (ObjectUtil.isNotNull(this.activity)) {
-            ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_BAR).fullScreen(false).init();
+            ImmersionBar.with(this.activity).hideBar(BarHide.FLAG_HIDE_BAR).init();
         }
         this.setVisibility(GONE);
     }
@@ -248,11 +248,7 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(EventBusCode eventBusCode) {
-        if (EventBusCode.SHOW_VIEW == eventBusCode) {//显示view
-            this.showView();
-        } else if (EventBusCode.HIDE_VIEW == eventBusCode) {//隐藏view
-            this.hideView();
-        } else if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
+        if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
             EventBus.getDefault().unregister(this);
             this.activity.unregisterReceiver(receiver);
         } else if (EventBusCode.TIME_CHANGE == eventBusCode) {//时间改变
@@ -263,7 +259,7 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
             batteryChange(eventBusCode.getCurrentBattery(), eventBusCode.isCharging());
         } else if (EventBusCode.NETWORK_CHANGE == eventBusCode) {//网络变化
             if (ObjectUtil.isNotNull(this.networkStatus)) {
-                NetWorkStatus networkStatus = NetworkUtils.getNetworkStatus(this.activity);
+                NetworkStatusEnum networkStatus = NetworkUtils.getNetworkStatus(this.activity);
                 this.networkStatus.setText(networkStatus.getMsg());
             }
         } else if (EventBusCode.POWER_DISCONNECTED == eventBusCode) {//断电
@@ -287,5 +283,17 @@ public class IjkPlayerControllerTop extends LinearLayout implements View.OnClick
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(ScreenLock screenLock) {
         this.screenLock = screenLock;
+    }
+
+    /**
+     * 控制界面显示/隐藏监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlayerControllerViewEnum controllerViewEnum) {
+        if (PlayerControllerViewEnum.OUT_SHOW == controllerViewEnum) {//显示view
+            this.showView();
+        } else if (PlayerControllerViewEnum.OUT_HIDE == controllerViewEnum) {//隐藏view
+            this.hideView();
+        }
     }
 }
