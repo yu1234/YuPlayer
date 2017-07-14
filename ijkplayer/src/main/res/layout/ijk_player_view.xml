@@ -4,26 +4,26 @@
     android:layout_height="match_parent"
     android:background="@color/c_light_black">
 
-    <com.yu.ijkplayer.view.playerView.IjkVideoView
+    <com.yu.ijkPlayer.view.playerView.IjkVideoView
         android:id="@+id/ijk_video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.yu.ijkplayer.view.controller.IjkPlayerControllerTop
+    <com.yu.ijkPlayer.view.controller.IjkPlayerControllerTop
         android:id="@+id/ijk_player_controller_top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:visibility="visible" />
 
-    <com.yu.ijkplayer.view.controller.IjkPlayerControllerCenter
+    <com.yu.ijkPlayer.view.controller.IjkPlayerControllerCenter
         android:id="@+id/ijk_player_controller_center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:visibility="visible" />
 
-    <com.yu.ijkplayer.view.controller.IjkPlayerControllerBottom
+    <com.yu.ijkPlayer.view.controller.IjkPlayerControllerBottom
         android:id="@+id/ijk_player_controller_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

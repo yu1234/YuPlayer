@@ -43,4 +43,6 @@ dependencies {
     compile 'com.jakewharton:butterknife:8.6.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.6.0'
     compile 'org.greenrobot:eventbus:3.0.0'
+    compile group: 'com.j256.ormlite', name: 'ormlite-android', version: '4.48'
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.7'
 }

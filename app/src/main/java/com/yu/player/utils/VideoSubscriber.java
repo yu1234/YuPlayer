@@ -202,7 +202,7 @@ public class VideoSubscriber<T extends File>  implements MediaScannerConnection.
             //开始扫描
             ReadFileUtil readFileUtil = ReadFileUtil.getInstance();
             this.subscriber=new MySubscriber();
-            readFileUtil.getFiles(ReadFileUtil.FileType.VOIDEO,this.subscriber);
+            readFileUtil.getFiles(ReadFileUtil.FileType.VIDEO,this.subscriber);
         }
     }
 

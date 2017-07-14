@@ -1,37 +1,21 @@
 package com.yu.player;
 
 import android.Manifest;
-import android.content.ContentResolver;
-import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.media.MediaPlayer;
-import android.media.MediaScannerConnection;
-import android.media.MediaScannerConnection.MediaScannerConnectionClient;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.ArraySet;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.generic.GenericDraweeHierarchy;
-import com.facebook.drawee.generic.GenericDraweeHierarchyBuilder;
-import com.facebook.drawee.generic.RoundingParams;
-import com.facebook.drawee.interfaces.DraweeController;
-import com.facebook.drawee.view.SimpleDraweeView;
 import com.wang.avi.AVLoadingIndicatorView;
 import com.wuxiaolong.pullloadmorerecyclerview.PullLoadMoreRecyclerView;
 import com.xiaoleilu.hutool.util.CollectionUtil;
@@ -39,24 +23,20 @@ import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.PermissionNo;
 import com.yanzhenjie.permission.PermissionYes;
-import com.yu.exoplayer.R2;
-import com.yu.exoplayer.activity.PlayerActivity;
-import com.yu.exoplayer.media.ui.VideoPlayerView;
 import com.yu.player.Impl.ScanFileCompletedImpl;
 import com.yu.player.adapter.VideoRecyclerViewAdapter;
 import com.yu.player.bean.VideoFile;
 import com.yu.player.utils.CacheUtils;
-import com.yu.player.utils.FileUtils;
-import com.yu.player.utils.ReadFileUtil;
 import com.yu.player.utils.VideoSubscriber;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
 
 public class MainActivity extends AppCompatActivity implements ScanFileCompletedImpl<VideoFile>, PullLoadMoreRecyclerView.PullLoadMoreListener {
 
@@ -172,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     @Override
     public void onRefresh() {
-        Log.i(TAG,"下拉刷新");
+        Log.i(TAG, "下拉刷新");
         scanFile();
     }
 
@@ -191,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     //显示列表
     private void showList() {
-        Log.i(TAG,"showList");
+        Log.i(TAG, "showList");
         pullLoadMoreRecyclerView.setPullLoadMoreCompleted();
         loading.hide();
         pullLoadMoreRecyclerView.setAdapter(new VideoRecyclerViewAdapter(MainActivity.this, videoFiles));
@@ -200,11 +180,12 @@ public class MainActivity extends AppCompatActivity implements ScanFileCompleted
 
     /**
      * 扫描完成回调
+     *
      * @param videoFiles
      */
     @Override
     public void onScanCompleted(List<VideoFile> videoFiles) {
-        Log.i(TAG,"扫描完成回调");
+        Log.i(TAG, "扫描完成回调");
         this.videoFiles = videoFiles;
         //重新渲染页面
         mHandler.sendEmptyMessage(1);

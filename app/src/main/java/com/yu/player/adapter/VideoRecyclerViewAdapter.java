@@ -3,18 +3,14 @@ package com.yu.player.adapter;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.facebook.drawee.view.SimpleDraweeView;
 import com.xiaoleilu.hutool.util.CollectionUtil;
-import com.xiaoleilu.hutool.util.ImageUtil;
 import com.xiaoleilu.hutool.util.ObjectUtil;
-import com.yu.exoplayer.utils.PlayerUtil;
 import com.yu.player.Impl.OnRecyclerViewClickListener;
 import com.yu.player.Impl.OnRecyclerViewLongClickListener;
 import com.yu.player.R;
@@ -23,8 +19,8 @@ import com.yu.player.dao.CommonDao;
 import com.yu.player.utils.DaoUtils;
 import com.yu.player.utils.ImageTools;
 
-import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -102,7 +98,7 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
             if (ObjectUtil.isNotNull(videoFileDao)) {
                 try {
                     VideoFile videoFile1 = videoFileDao.queryById(videoFile.getId());
-                    if(ObjectUtil.isNotNull(videoFile1)){
+                    if (ObjectUtil.isNotNull(videoFile1)) {
                         videoFile1.setWatch(true);
                         videoFile1.setNew(false);
                         videoFileDao.update(videoFile1);
@@ -113,7 +109,11 @@ public class VideoRecyclerViewAdapter extends RecyclerView.Adapter<VideoRecycler
                 }
             }
             Uri uri = videoFile.getUri();
-           com.yu.ijkplayer.utils.PlayerUtil.playVideo(context, uri);
+            List<Uri> uris = new ArrayList<Uri>();
+            for (VideoFile file : videoFiles) {
+                uris.add(file.getUri());
+            }
+            com.yu.ijkPlayer.utils.PlayerUtil.playVideo(context, uri, uris);
         }
 
     }

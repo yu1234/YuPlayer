@@ -4,12 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.yu.ijkplayer.view.controller.IjkPlayerView
+    <com.yu.ijkPlayer.view.controller.IjkPlayerView
         android:id="@+id/ijk_player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.yu.ijkplayer.view.controller.IjkPlayerSetting
+    <com.yu.ijkPlayer.view.controller.IjkPlayerSetting
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="end"

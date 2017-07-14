@@ -28,7 +28,7 @@ public class ReadFileUtil {
         @Override
         public boolean doFilter(File file, ReadFileUtil.FileType fileType) {
             if (ObjectUtil.isNotNull(file) && file.exists() && file.canRead() && file.isFile()) {
-                if (FileType.VOIDEO == fileType) {
+                if (FileType.VIDEO == fileType) {
                     if (FileUtils.isVideo(file)) {
                         if (file.length() > videoFileMinSize) {
                             return true;
@@ -46,7 +46,7 @@ public class ReadFileUtil {
     };
 
     public enum FileType {
-        VOIDEO, MUSIC, PICTURE
+        VIDEO, MUSIC, PICTURE
     }
 
     private ReadFileUtil() {
