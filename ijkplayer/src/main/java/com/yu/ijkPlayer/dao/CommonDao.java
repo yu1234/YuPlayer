@@ -15,15 +15,20 @@ import java.util.List;
  * Created by igreentree on 2017/6/5 0005.
  */
 
-public class CommonDao<T extends BaseBean> {
+public class CommonDao<T extends BaseBean> implements IBaseDao<T> {
     private Context context;
     private Dao dao;
     private MyDbHelper helper;
 
-    public CommonDao(Context context, Class<T> clazz) throws SQLException {
+    public CommonDao(Context context, Class<T> clazz) {
         this.context = context;
         helper = MyDbHelper.getHelper(context);
-        dao = helper.getDao(clazz);
+        try {
+            dao = helper.getDao(clazz);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -56,7 +61,7 @@ public class CommonDao<T extends BaseBean> {
         boolean flag = false;
         if (ObjectUtil.isNotNull(ts)) {
             for (T t : ts) {
-                flag= this.add(t);
+                flag = this.add(t);
             }
         }
         return flag;
@@ -122,6 +127,12 @@ public class CommonDao<T extends BaseBean> {
         return null;
     }
 
+    @Override
+    public List<T> queryByBuilder(QueryBuilder queryBuilder) {
+        return this.query(queryBuilder);
+    }
+
+
     /**
      * 查询全部
      *
@@ -157,6 +168,7 @@ public class CommonDao<T extends BaseBean> {
         return null;
     }
 
+
     /**
      * 获取dao
      *
@@ -165,4 +177,5 @@ public class CommonDao<T extends BaseBean> {
     public Dao getDao() {
         return dao;
     }
+
 }

@@ -21,6 +21,7 @@ import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkPlayer.R;
 import com.yu.ijkPlayer.R2;
 import com.yu.ijkPlayer.bean.VideoIjkBean;
+import com.yu.ijkPlayer.bean.daoBean.PlaySetting;
 import com.yu.ijkPlayer.bean.enumBean.GestureListenerCode;
 import com.yu.ijkPlayer.bean.enumBean.MediaQuality;
 import com.yu.ijkPlayer.bean.enumBean.PlayMode;
@@ -193,6 +194,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         }
     }
 
+
     /**
      * 事件注册
      */
@@ -270,6 +272,16 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
     public IjkPlayerView setPlayList(List<Uri> playList) {
         if (CollectionUtil.isNotEmpty(playList)) {
             this.playList = playList;
+        }
+        return this;
+    }
+
+    /**
+     * 设置播放器设置
+     */
+    public IjkPlayerView setPlayerSetting(PlaySetting playerSetting) {
+        if (ObjectUtil.isNotNull(playerSetting)) {
+            EventBus.getDefault().post(playerSetting);
         }
         return this;
     }

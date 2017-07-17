@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkPlayer.R;
 import com.yu.ijkPlayer.R2;
+import com.yu.ijkPlayer.bean.daoBean.PlaySetting;
 import com.yu.ijkPlayer.bean.enumBean.EventBusCode;
 import com.yu.ijkPlayer.bean.enumBean.GestureListenerCode;
 import com.yu.ijkPlayer.bean.enumBean.MediaQuality;
@@ -70,7 +71,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     /**
      * 播放模式 默认为循环
      */
-    private static final PlayMode PLAY_MODE = PlayMode.ALL_CYCLE;
+    private static PlayMode PLAY_MODE = PlayMode.ALL_CYCLE;
     /**
      * 当前屏幕是否锁屏 默认为没有锁屏
      */
@@ -402,7 +403,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(EventBusCode eventBusCode) {
-       if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
+        if (EventBusCode.ACTIVITY_FINISH == eventBusCode) {//activity退出
             EventBus.getDefault().unregister(this);
         } else if (EventBusCode.PROGRESS_CHANGE == eventBusCode) {
             syncProgress();
@@ -519,6 +520,7 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     public void onMessageEvent(ScreenLock screenLock) {
         this.screenLock = screenLock;
     }
+
     /**
      * 控制界面显示/隐藏监听
      */
@@ -529,5 +531,13 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
         } else if (PlayerControllerViewEnum.OUT_HIDE == controllerViewEnum) {//隐藏view
             this.hideView();
         }
+    }
+
+    /**
+     * 播放器设置监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlaySetting playSetting) {
+        PLAY_MODE = PlayMode.getPlayMode(playSetting.getPlayMode());
     }
 }

@@ -22,8 +22,11 @@ import com.yu.ijkPlayer.bean.enumBean.PlayerSettingEnum;
 import com.yu.ijkPlayer.bean.VideoIjkBean;
 import com.yu.ijkPlayer.config.DaoConfig;
 import com.yu.ijkPlayer.dao.CommonDao;
+import com.yu.ijkPlayer.dao.PlaySettingDao;
+import com.yu.ijkPlayer.global.IjkPlayerLib;
 import com.yu.ijkPlayer.utils.PlayerUtil;
 import com.yu.ijkPlayer.utils.ScreenRotateUtil;
+import com.yu.ijkPlayer.view.BaseActivity;
 import com.yu.ijkPlayer.view.controller.IjkPlayerView;
 import com.yu.ijkPlayer.view.playerView.PlayStateParams;
 
@@ -41,7 +44,7 @@ import butterknife.ButterKnife;
  * Created by yu on 2017/6/28 0028.
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
     @BindView(R2.id.ijk_player_view)
     IjkPlayerView player;
@@ -51,12 +54,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        IjkPlayerLib.initInstance(this);
         setContentView(R.layout.ijk_player);
         ButterKnife.bind(this);
         //注册重力感应
         ScreenRotateUtil.getInstance(this).start(this);
-        //EventBus注册
-        EventBus.getDefault().register(this);
         //参数初始化
         initParams();
         //初始化播放器
@@ -138,8 +140,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initPlayer() {
         //获取播放器设置
-        CommonDao<PlaySetting> playSettingDao = DaoConfig.DaoFactory(this, "PlaySetting");
-
+        PlaySettingDao playSettingDao = PlaySetting.dao;
+        PlaySetting playSetting = playSettingDao.getLastest();
+        if (ObjectUtil.isNull(playSetting)) {
+            playSetting = PlaySetting.getDefaultPlaySetting();
+            playSettingDao.add(playSetting);
+        }
+        //获取播放源信息
         Intent intent = getIntent();
         Uri uri = intent.getData();
         Bundle bundle = intent.getExtras();
@@ -153,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        //开始播放视频
         if (ObjectUtil.isNotNull(uri)) {
             final VideoIjkBean bean = PlayerUtil.getVideoInfo(this, uri);
             if (StrUtil.isNotBlank(bean.getUrl()) && ObjectUtil.isNotNull(player)) {
@@ -162,7 +170,8 @@ public class MainActivity extends AppCompatActivity {
                         .setResolution(bean.getHeight())
                         .setGravitySensor(true)
                         .setPlayList(list)
-                        .setPlaySource(uri)
+                        .setPlaySource(uri).
+                        setPlayerSetting(playSetting)
                         .startPlay();
             }
 

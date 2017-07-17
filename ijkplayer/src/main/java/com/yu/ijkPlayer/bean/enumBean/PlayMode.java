@@ -8,14 +8,15 @@ import com.xiaoleilu.hutool.util.ArrayUtil;
  */
 
 public enum PlayMode {
-    ALL_CYCLE(1),//全部循环
-    ONE_CYCLE(2),//单一循环
-    RANDOM(3),//随机
-    STOP(4);//停止
+    ALL_CYCLE(1,"列表循环"),//全部循环
+    ONE_CYCLE(2,"单个循环"),//单一循环
+    RANDOM(3,"列表随机"),//随机
+    STOP(4,"播完退出");//停止
     private int id;
-
-    PlayMode(int id) {
+    private String name;
+    PlayMode(int id,String name) {
         this.id = id;
+        this.name=name;
     }
 
     public int getId() {

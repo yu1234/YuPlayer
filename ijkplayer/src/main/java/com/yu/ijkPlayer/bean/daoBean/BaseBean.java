@@ -12,7 +12,7 @@ import java.util.Date;
 public class BaseBean {
 
     @DatabaseField(id=true)
-    private long id;
+    private long id=System.currentTimeMillis();
     @DatabaseField
     private Date createTime=new Date();
 

@@ -14,7 +14,8 @@
         app:tabGravity="fill"
         app:tabMode="fixed"
         app:tabSelectedTextColor="@color/colorAccent"
-        app:tabTextColor="@android:color/white">
+        app:tabTextColor="@android:color/white"
+        android:background="#D6000000">
 
         <android.support.design.widget.TabItem
             android:layout_width="wrap_content"
@@ -24,12 +25,7 @@
         <android.support.design.widget.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="样式设置" />
-
-        <android.support.design.widget.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="音频设置" />
+            android:text="显示设置" />
     </android.support.design.widget.TabLayout>
 
     <android.support.v4.view.ViewPager

@@ -40,7 +40,7 @@ public class MyDbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database, ConnectionSource connectionSource) {
         try {
-            List<Bean> beans = DaoConfig.getDaoBeans(context);
+            List<Bean> beans = DaoConfig.getDaoBeans();
             if (CollectionUtil.isNotEmpty(beans)) {
                 for (Bean bean : beans) {
                     Class clazz = Class.forName(bean.getClassName());
@@ -58,7 +58,7 @@ public class MyDbHelper extends OrmLiteSqliteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase database, ConnectionSource connectionSource, int oldVersion, int newVersion) {
         try {
-            List<Bean> beans = DaoConfig.getDaoBeans(context);
+            List<Bean> beans = DaoConfig.getDaoBeans();
             if (CollectionUtil.isNotEmpty(beans)) {
                 for (Bean bean : beans) {
                     Class clazz = Class.forName(bean.getClassName());
