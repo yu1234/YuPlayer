@@ -165,7 +165,7 @@ public class MainActivity extends BaseActivity {
             final VideoIjkBean bean = PlayerUtil.getVideoInfo(this, uri);
             if (StrUtil.isNotBlank(bean.getUrl()) && ObjectUtil.isNotNull(player)) {
                 player.setTitle(bean.getTitle())
-                        .setScaleType(PlayStateParams.fitparent)
+                        .setScaleType(playSetting.getPlayScreenSize())
                         .forbidTouch(false)
                         .setResolution(bean.getHeight())
                         .setGravitySensor(true)

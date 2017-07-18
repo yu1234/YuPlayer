@@ -19,4 +19,22 @@
         android:gravity="center"
         android:paddingTop="10dp">
     </GridLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="@android:color/darker_gray"  />
+    <GridLayout
+        android:id="@+id/ijk_player_setting_screen_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:alignmentMode="alignMargins"
+        android:background="#00000000"
+        android:columnCount="3"
+        android:rowCount="2"
+        android:useDefaultMargins="true"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingTop="10dp">
+    </GridLayout>
 </LinearLayout>

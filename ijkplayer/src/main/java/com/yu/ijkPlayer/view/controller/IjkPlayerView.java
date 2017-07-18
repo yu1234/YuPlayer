@@ -102,7 +102,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
     /**
      * 视频显示比例,全屏
      */
-    private int currentShowType = PlayStateParams.fitxy;
+    private int currentShowType = PlayStateParams.f4_3;
     /**
      * 禁止触摸，默认可以触摸，true为禁止false为可触摸
      */
@@ -631,5 +631,8 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(PlaySetting playSetting) {
         PlaySetting.dao.updateOrAdd(playSetting);
+        if(currentShowType!=playSetting.getPlayScreenSize()){
+            this.setScaleType(playSetting.getPlayScreenSize());
+        }
     }
 }

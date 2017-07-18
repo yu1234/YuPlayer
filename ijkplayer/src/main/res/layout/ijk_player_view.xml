@@ -2,12 +2,13 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/c_light_black">
+    android:background="@android:color/black">
 
     <com.yu.ijkPlayer.view.playerView.IjkVideoView
         android:id="@+id/ijk_video_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
 
     <com.yu.ijkPlayer.view.controller.IjkPlayerControllerTop
         android:id="@+id/ijk_player_controller_top"
