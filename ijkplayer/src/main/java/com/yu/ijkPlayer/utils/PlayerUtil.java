@@ -19,12 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import top.wefor.randompicker.RandomPicker;
+
 /**
  * Created by igreentree on 2017/7/7 0007.
  */
 
 public class PlayerUtil {
     private static final String TAG = PlayerUtil.class.getSimpleName();
+    private static RandomPicker randomPicker = new RandomPicker();
 
     public static void playVideo(Context context, Uri uri) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -95,8 +98,8 @@ public class PlayerUtil {
      * 注意:包含0不包含n
      */
     public static int getRandom(int n) {
-        Random random = new Random();
-        int r = random.nextInt();
-        return r%n;
+        randomPicker.initSize(n);
+        int nextPos = randomPicker.next();
+        return nextPos;
     }
 }

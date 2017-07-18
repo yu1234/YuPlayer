@@ -9,7 +9,6 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
@@ -45,4 +44,5 @@ dependencies {
     compile 'org.greenrobot:eventbus:3.0.0'
     compile group: 'com.j256.ormlite', name: 'ormlite-android', version: '4.48'
     compile group: 'com.alibaba', name: 'fastjson', version: '1.2.7'
+    compile 'com.github.XunMengWinter:RandomPicker:0.1.0'
 }
