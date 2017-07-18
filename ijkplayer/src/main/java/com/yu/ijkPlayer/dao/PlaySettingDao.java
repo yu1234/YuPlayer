@@ -23,7 +23,7 @@ public class PlaySettingDao extends CommonDao<PlaySetting> {
      *
      * @return
      */
-    public PlaySetting getLastest() {
+    public PlaySetting getLatest() {
         QueryBuilder queryBuilder = this.getDao().queryBuilder();
         queryBuilder.limit(1L);
         queryBuilder.orderBy("createTime", false);

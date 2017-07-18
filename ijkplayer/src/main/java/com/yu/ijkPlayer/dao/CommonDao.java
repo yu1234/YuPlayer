@@ -85,6 +85,21 @@ public class CommonDao<T extends BaseBean> implements IBaseDao<T> {
         return flag;
     }
 
+    @Override
+    public boolean updateOrAdd(T t) {
+        boolean flag = false;
+        try {
+            Dao.CreateOrUpdateStatus createOrUpdateStatus = dao.createOrUpdate(t);
+
+            if (createOrUpdateStatus.getNumLinesChanged() > 0) {
+                flag = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return flag;
+    }
+
     /**
      * 批量删除信息
      *

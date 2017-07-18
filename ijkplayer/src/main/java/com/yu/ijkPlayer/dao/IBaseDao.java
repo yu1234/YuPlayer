@@ -30,6 +30,12 @@ public interface IBaseDao<T extends BaseBean>  {
      */
      boolean update(T t);
     /**
+     * 更新或插入信息
+     *
+     * @param t
+     */
+    boolean updateOrAdd(T t);
+    /**
      * 批量删除信息
      *
      * @return

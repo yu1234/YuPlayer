@@ -4,7 +4,7 @@ package com.yu.ijkPlayer.bean.enumBean;
  * Created by igreentree on 2017/7/10 0010.
  */
 
-public enum EventBusCode {
+public enum EventBusCode   {
     ACTIVITY_FINISH//播放器页面关闭
     , TIME_CHANGE//时间改变
     , BATTERY_CHANGE//电量改变

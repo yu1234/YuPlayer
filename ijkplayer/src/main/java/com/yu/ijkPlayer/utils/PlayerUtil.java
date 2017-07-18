@@ -17,6 +17,7 @@ import com.yu.ijkPlayer.bean.VideoIjkBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by igreentree on 2017/7/7 0007.
@@ -85,5 +86,16 @@ public class PlayerUtil {
         int minutes = (totalSeconds / 60) % 60;
         int hours = totalSeconds / 3600;
         return hours > 0 ? String.format("%02d:%02d:%02d", hours, minutes, seconds) : String.format("%02d:%02d", minutes, seconds);
+    }
+
+    /**
+     * 生成随机数
+     * 在一定范围内生成随机数.
+     * 比如此处要求在[0 - n)内生成随机数.
+     * 注意:包含0不包含n
+     */
+    public static int getRandom(int n) {
+        Random random = new Random();
+        return random.nextInt(n);
     }
 }

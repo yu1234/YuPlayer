@@ -23,7 +23,7 @@ import java.util.List;
 
 public class MyDbHelper extends OrmLiteSqliteOpenHelper {
     private static final String CDB_DB_NAME = "yu_player_media_db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 1;
     private static MyDbHelper instance;
     private Context context;
 

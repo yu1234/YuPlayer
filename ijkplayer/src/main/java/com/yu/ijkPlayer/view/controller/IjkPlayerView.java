@@ -17,6 +17,7 @@ import android.widget.FrameLayout;
 
 import com.xiaoleilu.hutool.util.CollectionUtil;
 import com.xiaoleilu.hutool.util.ObjectUtil;
+import com.xiaoleilu.hutool.util.PageUtil;
 import com.xiaoleilu.hutool.util.StrUtil;
 import com.yu.ijkPlayer.R;
 import com.yu.ijkPlayer.R2;
@@ -331,6 +332,27 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
 
     }
 
+
+    /**
+     * 随机播放
+     */
+    public void randomPlay() {
+        if (CollectionUtil.isNotEmpty(this.playList) && this.playList.size() > 1) {
+            int random = PlayerUtil.getRandom(this.playList.size());
+            if (this.currentPlayIndex != random) {
+                Uri uri = this.playList.get(random);
+                if (ObjectUtil.isNotNull(uri)) {
+                    VideoIjkBean bean = PlayerUtil.getVideoInfo(this.context, uri);
+                    this.setTitle(bean.getTitle()).setPlaySource(uri).startPlay();
+                }
+            } else {
+                randomPlay();
+            }
+        } else {
+            startPlay();
+        }
+    }
+
     /**
      * 设置分辨率
      */
@@ -570,7 +592,15 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
                 this.activity.finish();
             }
         } else if (PlayMode.RANDOM == mode) {//随机播放
-
+            randomPlay();
         }
+    }
+
+    /**
+     * 播放器设置监听
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(PlaySetting playSetting) {
+        PlaySetting.dao.updateOrAdd(playSetting);
     }
 }

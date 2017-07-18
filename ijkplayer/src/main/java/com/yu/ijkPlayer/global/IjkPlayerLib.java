@@ -1,6 +1,5 @@
 package com.yu.ijkPlayer.global;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
@@ -62,7 +61,7 @@ public class IjkPlayerLib {
     private void getDaoBeans() {
         beans.clear();
         beanMap.clear();
-        XmlResourceParser xml = context.getResources().getXml(R.xml.dao_beans);
+        XmlResourceParser xml = context.getResources().getXml(R.xml.ijk_dao_beans);
         try {
             xml.next();
             int eventType = xml.getEventType();

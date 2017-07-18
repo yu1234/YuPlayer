@@ -23,6 +23,11 @@ public enum PlayMode {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+
     public static PlayMode getPlayMode(int id) {
         PlayMode[] playModes = PlayMode.values();
         if (ArrayUtil.isNotEmpty(playModes)) {

@@ -141,7 +141,7 @@ public class MainActivity extends BaseActivity {
     private void initPlayer() {
         //获取播放器设置
         PlaySettingDao playSettingDao = PlaySetting.dao;
-        PlaySetting playSetting = playSettingDao.getLastest();
+        PlaySetting playSetting = playSettingDao.getLatest();
         if (ObjectUtil.isNull(playSetting)) {
             playSetting = PlaySetting.getDefaultPlaySetting();
             playSettingDao.add(playSetting);
