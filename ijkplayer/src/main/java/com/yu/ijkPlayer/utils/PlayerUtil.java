@@ -96,6 +96,7 @@ public class PlayerUtil {
      */
     public static int getRandom(int n) {
         Random random = new Random();
-        return random.nextInt(n);
+        int r = random.nextInt();
+        return r%n;
     }
 }

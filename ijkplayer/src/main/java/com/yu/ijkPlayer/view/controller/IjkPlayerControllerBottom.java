@@ -87,6 +87,10 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
     TextView videoEndTime;
     @BindView(R2.id.video_play)
     ImageView videoPlay;
+    @BindView(R2.id.ijk_player_play_previous)
+    ImageView playPrevious;
+    @BindView(R2.id.ijk_player_play_next)
+    ImageView playNext;
     @BindView(R2.id.player_play_c)
     ImageView playerPlayC;
     @BindView(R2.id.ijk_player_media_quality_txt)
@@ -153,6 +157,14 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
         if (ObjectUtil.isNotNull(this.ijkPlayerLockBox)) {
             this.ijkPlayerLockBox.setOnClickListener(this);
         }
+        //下一首
+        if (ObjectUtil.isNotNull(this.playPrevious)) {
+            this.playPrevious.setOnClickListener(this);
+        }
+        //上一首
+        if (ObjectUtil.isNotNull(this.playNext)) {
+            this.playNext.setOnClickListener(this);
+        }
     }
 
     /**
@@ -186,6 +198,22 @@ public class IjkPlayerControllerBottom extends LinearLayout implements View.OnCl
                 this.screenLock = ScreenLock.UNLOCK;
             }
             EventBus.getDefault().post(this.screenLock);
+        } else if (v.getId() == R.id.ijk_player_play_next) {
+            if (this.PLAY_MODE != PlayMode.STOP) {
+                EventBus.getDefault().post(this.PLAY_MODE);
+            } else {
+                EventBus.getDefault().post(PlayMode.ALL_CYCLE);
+            }
+
+        } else if (v.getId() == R.id.ijk_player_play_previous) {
+            if (this.PLAY_MODE != PlayMode.STOP && this.PLAY_MODE != PlayMode.ALL_CYCLE) {
+                EventBus.getDefault().post(this.PLAY_MODE);
+            } else {
+                PlayMode playMode = PlayMode.ALL_CYCLE;
+                playMode.setPrevious(true);
+                EventBus.getDefault().post(playMode);
+                playMode.setPrevious(false);
+            }
         }
     }
 

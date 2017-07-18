@@ -292,11 +292,10 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
      */
     public IjkPlayerView startPlay() {
         if (playerSupport && ObjectUtil.isNotNull(ijkVideoView)) {
-
             //换源之后声音可播，画面卡住，主要是渲染问题，目前只是提供了软解方式，后期提供设置方式
             ijkVideoView.setRender(ijkVideoView.RENDER_TEXTURE_VIEW);
             ijkVideoView.setOnCompletionListener(this);
-            ijkVideoView.start();
+            ijkVideoView.start(0);
             controllerBottom.setPlayer(ijkVideoView);
             controllerCenter.setPlayer(ijkVideoView);
             EventBus.getDefault().post(PlayerListenerEnum.IN_START);
@@ -320,6 +319,32 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
                 }
             } else {
                 Uri uri = this.playList.get(this.currentPlayIndex + 1);
+                if (ObjectUtil.isNotNull(uri)) {
+                    VideoIjkBean bean = PlayerUtil.getVideoInfo(this.context, uri);
+                    this.setTitle(bean.getTitle()).setPlaySource(uri)
+                            .startPlay();
+                }
+            }
+        } else {
+            startPlay();
+        }
+
+    }
+
+    /**
+     * 播放上一首
+     */
+    public void playPrevious() {
+        if (CollectionUtil.isNotEmpty(this.playList) && this.playList.size() > 1) {
+            if(this.currentPlayIndex>0){
+                Uri uri = this.playList.get(this.currentPlayIndex - 1);
+                if (ObjectUtil.isNotNull(uri)) {
+                    VideoIjkBean bean = PlayerUtil.getVideoInfo(this.context, uri);
+                    this.setTitle(bean.getTitle()).setPlaySource(uri)
+                            .startPlay();
+                }
+            }else {
+                Uri uri = this.playList.get(this.playList.size()- 1);
                 if (ObjectUtil.isNotNull(uri)) {
                     VideoIjkBean bean = PlayerUtil.getVideoInfo(this.context, uri);
                     this.setTitle(bean.getTitle()).setPlaySource(uri)
@@ -584,7 +609,11 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(PlayMode mode) {
         if (PlayMode.ALL_CYCLE == mode) {//全部循环
-            this.cyclePlay();
+            if (mode.isPrevious()) {//播放上一首
+                playPrevious();
+            } else {
+                this.cyclePlay();//播放下一首
+            }
         } else if (PlayMode.ONE_CYCLE == mode) {//单一循环
             this.startPlay();
         } else if (PlayMode.STOP == mode) {//停止播放
