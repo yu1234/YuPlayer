@@ -139,6 +139,10 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
      * 当前状态
      */
     private int status = PlayStateParams.STATE_IDLE;
+    /**
+     * 使用编解码器硬编码还是软编码，true 硬编码 false 为软编码
+     */
+    private boolean usingMediaCodec = false;
 
     public IjkPlayerView(@NonNull Context context) {
         this(context, null);
@@ -286,7 +290,16 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         }
         return this;
     }
-
+    /**
+     * 设置解码器
+     * @return
+     */
+    public void setUsingMediaCodec(boolean usingMediaCodec) {
+        this.usingMediaCodec = usingMediaCodec;
+        if(ObjectUtil.isNotNull(ijkVideoView)){
+            ijkVideoView.setUsingMediaCodec(this.usingMediaCodec);
+        }
+    }
     /**
      * 开始播放
      */
@@ -294,6 +307,7 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         if (playerSupport && ObjectUtil.isNotNull(ijkVideoView)) {
             //换源之后声音可播，画面卡住，主要是渲染问题，目前只是提供了软解方式，后期提供设置方式
             ijkVideoView.setRender(ijkVideoView.RENDER_TEXTURE_VIEW);
+
             ijkVideoView.setOnCompletionListener(this);
             ijkVideoView.start(0);
             controllerBottom.setPlayer(ijkVideoView);
@@ -633,6 +647,11 @@ public class IjkPlayerView extends FrameLayout implements IMediaPlayer.OnComplet
         PlaySetting.dao.updateOrAdd(playSetting);
         if(currentShowType!=playSetting.getPlayScreenSize()){
             this.setScaleType(playSetting.getPlayScreenSize());
+        }
+        boolean playCode=playSetting.getPlayCode()==1?true:false;
+        if(usingMediaCodec!=playCode){
+            this.setUsingMediaCodec(playCode);
+            this.setPlaySource(currentPlayUri).startPlay();
         }
     }
 }

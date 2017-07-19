@@ -16,6 +16,7 @@ import com.xiaoleilu.hutool.util.ObjectUtil;
 import com.yu.ijkPlayer.R;
 import com.yu.ijkPlayer.R2;
 import com.yu.ijkPlayer.bean.daoBean.PlaySetting;
+import com.yu.ijkPlayer.bean.enumBean.PlayCode;
 import com.yu.ijkPlayer.bean.enumBean.PlayMode;
 import com.yu.ijkPlayer.bean.enumBean.PlayScreenSize;
 import com.yu.ijkPlayer.utils.DensityUtils;
@@ -38,6 +39,8 @@ public class PlaySettingFragment extends BaseFragment implements View.OnClickLis
     /**
      * 依赖注入
      */
+    @BindView(R2.id.ijk_player_setting_play_codec_box)
+    GridLayout playCodecGridLayout;//播放编码容器
     @BindView(R2.id.ijk_player_setting_player_mode_box)
     GridLayout playModeGridLayout;
     @BindView(R2.id.ijk_player_setting_screen_box)
@@ -50,6 +53,10 @@ public class PlaySettingFragment extends BaseFragment implements View.OnClickLis
      * 播放页面尺寸
      */
     private static PlayScreenSize PLAY_SCREEN_SIZE = PlayScreenSize.FIT_PARENT;
+    /**
+     * 播放器界面模式
+     */
+    private static PlayCode PLAY_CODE = PlayCode.SOFT_CODING;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,6 +82,7 @@ public class PlaySettingFragment extends BaseFragment implements View.OnClickLis
      * 初始化页面
      */
     private void initView() {
+        playCodecSetting();
         playModeSetting();
         playScreenSizeSetting();
     }
@@ -152,6 +160,44 @@ public class PlaySettingFragment extends BaseFragment implements View.OnClickLis
 
         }
     }
+    /**
+     * 设置播放编码
+     */
+    private void playCodecSetting(){
+        if (ObjectUtil.isNotNull(this.playCodecGridLayout)) {
+            int colCount = this.playCodecGridLayout.getColumnCount();
+            for (int i = 0; i < PlayCode.values().length; i++) {
+                final PlayerSettingButton playModeButton = new PlayerSettingButton(this.getContext());
+                playModeButton.setType(PlayCode.values()[i]);
+                playModeButton.setText(PlayCode.values()[i].getName());
+                if (PLAY_CODE == PlayCode.values()[i]) {
+                    playModeButton.setSelected(true);
+                }
+                playModeButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        PlayerSettingButton view = (PlayerSettingButton) v;
+                        PlaySetting playerSetting = PlaySetting.dao.getLatest();
+                        if(ObjectUtil.isNotNull(playerSetting)){
+                            playerSetting.setPlayCode(((PlayCode) view.getType()).getId());
+                            EventBus.getDefault().post(playerSetting);
+                        }
+                        for (int j = 0; j < playCodecGridLayout.getChildCount(); j++) {
+                            playCodecGridLayout.getChildAt(j).setSelected(false);
+                        }
+                        view.setSelected(true);
+                    }
+                });
+                //由于方法重载，注意这个地方的1.0f 必须是float
+                GridLayout.Spec rowSpec = GridLayout.spec(i / colCount, 1.0f);
+                GridLayout.Spec columnSpec = GridLayout.spec(i % colCount, 1.0f);
+
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams(rowSpec, columnSpec);
+                this.playCodecGridLayout.addView(playModeButton, params);
+            }
+
+        }
+    }
 
     /**
      * 点击事件回调
@@ -174,6 +220,7 @@ public class PlaySettingFragment extends BaseFragment implements View.OnClickLis
         if (ObjectUtil.isNotNull(playSetting)) {
             PLAY_MODE = PlayMode.getPlayMode(playSetting.getPlayMode());
             PLAY_SCREEN_SIZE = PlayScreenSize.getPlayScreenSize(playSetting.getPlayScreenSize());
+            PLAY_CODE=PlayCode.getPlayCodec(playSetting.getPlayCode());
         }
 
     }

@@ -1083,5 +1083,15 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         }
     }
 
+    /**
+     * 设置解码器
+     * @return
+     */
+    public boolean isUsingMediaCodec() {
+        return usingMediaCodec;
+    }
 
+    public void setUsingMediaCodec(boolean usingMediaCodec) {
+        this.usingMediaCodec = usingMediaCodec;
+    }
 }

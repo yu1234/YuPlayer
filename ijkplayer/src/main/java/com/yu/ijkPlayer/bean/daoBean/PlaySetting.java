@@ -2,6 +2,7 @@ package com.yu.ijkPlayer.bean.daoBean;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import com.yu.ijkPlayer.bean.enumBean.PlayCode;
 import com.yu.ijkPlayer.bean.enumBean.PlayMode;
 import com.yu.ijkPlayer.bean.enumBean.PlayScreenSize;
 import com.yu.ijkPlayer.dao.PlaySettingDao;
@@ -19,6 +20,8 @@ public class PlaySetting extends BaseBean {
 
     @DatabaseField
     private int  playScreenSize;//播放页面尺寸
+    @DatabaseField
+    private int  playCode;//解码器
 
     public int getPlayMode() {
         return playMode;
@@ -36,10 +39,19 @@ public class PlaySetting extends BaseBean {
         this.playScreenSize = playScreenSize;
     }
 
+    public int getPlayCode() {
+        return playCode;
+    }
+
+    public void setPlayCode(int playCode) {
+        this.playCode = playCode;
+    }
+
     public static PlaySetting getDefaultPlaySetting() {
         PlaySetting playSetting = new PlaySetting();
         playSetting.setPlayMode(PlayMode.ALL_CYCLE.getId());
         playSetting.setPlayScreenSize(PlayScreenSize.FIT_PARENT.getId());
+        playSetting.setPlayCode(PlayCode.SOFT_CODING.getId());
         return playSetting;
     }
 }
